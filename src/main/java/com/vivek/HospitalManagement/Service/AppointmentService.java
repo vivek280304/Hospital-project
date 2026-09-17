@@ -102,6 +102,15 @@ public class AppointmentService {
             );
         }
 
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted", e);
+        }
+
+
+
         String bookingKey =
                 doctor.getId() + "-" +
                         request.getAppointmentDate() + "-" +
