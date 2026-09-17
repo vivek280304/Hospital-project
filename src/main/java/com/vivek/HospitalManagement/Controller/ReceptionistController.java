@@ -1,6 +1,7 @@
 package com.vivek.HospitalManagement.Controller;
 
 
+import com.vivek.HospitalManagement.DTO.Auth.Request.BookAppointmentRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Request.CreatePatientRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Response.AvailableSlotResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.PatientDetailsResponse;
@@ -73,6 +74,17 @@ public class ReceptionistController {
         );
     }
 
+    @PostMapping("/appointments/{patientId}")
+    public ResponseEntity<String> bookAppointment(
+            @PathVariable Long patientId,
+            @Valid @RequestBody BookAppointmentRequest request) {
 
+        receptionistService.bookAppointmentForPatient(
+                patientId,
+                request
+        );
+
+        return ResponseEntity.ok("Appointment booked successfully");
+    }
 
 }

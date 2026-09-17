@@ -1,5 +1,6 @@
 package com.vivek.HospitalManagement.Service;
 
+import com.vivek.HospitalManagement.DTO.Auth.Request.BookAppointmentRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Request.CreatePatientRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Response.AvailableSlotResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.PatientDetailsResponse;
@@ -36,11 +37,12 @@ public class ReceptionistService {
         private final PasswordEncoder passwordEncoder;
         private final EmailService emailService;
         private final InitialPassword initialPassword;
+        private final AppointmentService appointmentService;
 
     private static final Logger log =
             LoggerFactory.getLogger(ReceptionistService.class);
 
-    public ReceptionistService(ReceptionistRepository receptionistRepository, UserRepository userRepository, PatientRepository patientRepository, DoctorRepository doctorRepository, DoctorScheduleRepository doctorScheduleRepository, AppointmentRepository appointmentRepository, PasswordEncoder passwordEncoder, EmailService emailService, InitialPassword initialPassword) {
+    public ReceptionistService(ReceptionistRepository receptionistRepository, UserRepository userRepository, PatientRepository patientRepository, DoctorRepository doctorRepository, DoctorScheduleRepository doctorScheduleRepository, AppointmentRepository appointmentRepository, PasswordEncoder passwordEncoder, EmailService emailService, InitialPassword initialPassword, AppointmentService appointmentService) {
         this.receptionistRepository = receptionistRepository;
         this.userRepository = userRepository;
         this.patientRepository = patientRepository;
@@ -50,6 +52,7 @@ public class ReceptionistService {
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.initialPassword = initialPassword;
+        this.appointmentService = appointmentService;
     }
 
 
@@ -214,7 +217,22 @@ public class ReceptionistService {
     }
 
 //    BOOK APPOINTMENT
+@Transactional
+public void bookAppointmentForPatient(
+        Long patientId,
+        BookAppointmentRequest request) {
 
+    Patient patient = patientRepository.findById(patientId)
+            .orElseThrow(() ->
+                    new ResourceNotFoundException("Patient not found"));
+
+    String patientEmail = patient.getUser().getEmail();
+
+    appointmentService.bookAppointment(
+            patientEmail,
+            request
+    );
+}
 
 
 }
