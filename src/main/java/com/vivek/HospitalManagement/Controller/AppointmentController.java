@@ -61,4 +61,6 @@ public class AppointmentController {
 
         return ResponseEntity.ok("Appointment cancelled successfully");
     }
+
+
 }

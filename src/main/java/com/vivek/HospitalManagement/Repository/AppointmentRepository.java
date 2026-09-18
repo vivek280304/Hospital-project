@@ -38,4 +38,8 @@ public interface AppointmentRepository
             Long doctorId,
             Long patientId
     );
+
+    List<Appointment> findByPatientUserEmailOrderByAppointmentDateAscAppointmentTimeAsc(
+            String email
+    );
 }
