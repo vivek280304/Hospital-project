@@ -58,8 +58,17 @@ public class AppointmentService {
                         new ResourceNotFoundException("User not found"));
 
         Patient patient = patientRepository.findByUserId(user.getId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Patient profile not found"));
+                .orElseGet(() -> {
+
+                    Patient newPatient = new Patient();
+
+                    newPatient.setUser(user);
+                    newPatient.setDateOfBirth(request.getDateOfBirth());
+                    newPatient.setGender(request.getGender());
+                    newPatient.setPhoneNumber(request.getPhoneNumber());
+
+                    return patientRepository.save(newPatient);
+                });
 
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
                 .orElseThrow(() ->
@@ -102,15 +111,6 @@ public class AppointmentService {
             );
         }
 
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Thread interrupted", e);
-        }
-
-
-
         String bookingKey =
                 doctor.getId() + "-" +
                         request.getAppointmentDate() + "-" +
@@ -141,6 +141,39 @@ public class AppointmentService {
                 appointment.getAppointmentTime(),
                 appointment.getReason()
         );
+
+    }
+
+    public void cancelAppointment(Long appointmentId, String email){
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(()-> new ResourceNotFoundException("User not found"));
+
+        Patient patient = patientRepository.findByUserId(user.getId())
+                .orElseThrow(()->new ResourceNotFoundException("Patient not found"));
+
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(()-> new ResourceNotFoundException("Appointment not found"));
+
+        if (!appointment.getPatient().getId().equals(patient.getId())){
+            throw new BadRequestException("You cannot cancel this appointment");
+
+        }
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED){
+            throw new BadRequestException("Appointment already canceled");
+        }
+
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new BadRequestException(
+                    "Completed appointment cannot be cancelled"
+            );
+        }
+
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+
+        appointment.setBookingKey(null);
+
+        appointmentRepository.save(appointment);
 
     }
 

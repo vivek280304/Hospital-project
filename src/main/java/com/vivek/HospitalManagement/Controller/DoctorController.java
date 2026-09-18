@@ -4,8 +4,7 @@ import com.vivek.HospitalManagement.DTO.Auth.Request.CreateMedicalReportRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Request.ImagingOrderRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Request.SharePatientRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Response.*;
-import com.vivek.HospitalManagement.Entity.DiagnosticImage;
-import com.vivek.HospitalManagement.Entity.ImagingOrder;
+import com.vivek.HospitalManagement.Entity.*;
 import com.vivek.HospitalManagement.Service.*;
 import com.vivek.HospitalManagement.Service.Reports.DiagnosticImageService;
 import com.vivek.HospitalManagement.Service.Reports.ImagingOrderService;
@@ -38,7 +37,8 @@ public class DoctorController {
                             ImagingOrderService imagingOrderService,
                             DiagnosticImageService diagnosticImageService,
                             MinioStorageService minioStorageService,
-                            DoctorPatientShareService doctorPatientShareService, MedicalReportService medicalReportService) {
+                            DoctorPatientShareService doctorPatientShareService,
+                            MedicalReportService medicalReportService) {
 
 
         this.doctorService = doctorService;
@@ -73,6 +73,19 @@ public class DoctorController {
                 );
 
         return ResponseEntity.ok(appointments);
+    }
+
+    @PatchMapping("/appointments/{appointmentId}/complete")
+    public ResponseEntity<String> completeAppointment(
+            @PathVariable Long appointmentId,
+            Authentication authentication) {
+
+        doctorService.completeAppointment(
+                appointmentId,
+                authentication.getName()
+        );
+
+        return ResponseEntity.ok("Appointment completed successfully");
     }
 
     @GetMapping("/appointments/{appointmentId}/patient")

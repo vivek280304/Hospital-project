@@ -48,4 +48,17 @@ public class AppointmentController {
 
         return ResponseEntity.ok(slots);
     }
+
+    @DeleteMapping("/{appointmentId}")
+    public ResponseEntity<String> cancelAppointment(
+            @PathVariable Long appointmentId,
+            Authentication authentication) {
+
+        appointmentService.cancelAppointment(
+                appointmentId,
+                authentication.getName()
+        );
+
+        return ResponseEntity.ok("Appointment cancelled successfully");
+    }
 }

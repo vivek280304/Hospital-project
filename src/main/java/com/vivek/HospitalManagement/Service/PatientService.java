@@ -1,6 +1,5 @@
 package com.vivek.HospitalManagement.Service;
 
-import com.vivek.HospitalManagement.DTO.Auth.Request.PatientProfileRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Response.PatientProfileResponse;
 import com.vivek.HospitalManagement.Entity.Patient;
 import com.vivek.HospitalManagement.Entity.User;
@@ -21,31 +20,23 @@ public class PatientService {
         this.patientRepository = patientRepository;
     }
 
-    public PatientProfileResponse createProfile( String email,PatientProfileRequest request){
+    public PatientProfileResponse getMyProfile(String email) {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(()->new UsernameNotFoundException("User not found"));
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("User not found"));
 
-
-        if (patientRepository.findByUserId(user.getId()).isPresent()) {
-            throw new RuntimeException("Patient profile already exists");
-        }
-
-        Patient patient = new Patient();
-
-        patient.setUser(user);
-        patient.setDateOfBirth(request.getDateOfBirth());
-        patient.setGender(request.getGender());
-        patient.setPhoneNumber(request.getPhoneNumber());
-
-        patientRepository.save(patient);
+        Patient patient =  patientRepository.findByUserId(user.getId())
+                .orElseThrow(() ->
+                        new RuntimeException("Doctor profile not found"));
 
         return new PatientProfileResponse(
-                user.getName()
-                ,user.getEmail()
-                ,patient.getDateOfBirth()
-                ,patient.getGender()
-                ,patient.getPhoneNumber());
+                user.getName(),
+                user.getEmail(),
+                patient.getDateOfBirth(),
+                patient.getGender(),
+                patient.getPhoneNumber()
+                );
 
     }
 

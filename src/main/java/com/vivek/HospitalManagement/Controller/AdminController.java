@@ -16,7 +16,7 @@ public class AdminController {
         this.adminService = adminService;
     }
 
-    @PostMapping("/users")
+    @PostMapping("/create-users")
     public ResponseEntity<String> createUser(@Valid @RequestBody CreateUserRequest request){
 
         adminService.create(request);

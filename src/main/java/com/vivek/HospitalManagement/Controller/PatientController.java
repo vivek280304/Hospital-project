@@ -1,16 +1,11 @@
 package com.vivek.HospitalManagement.Controller;
 
-import com.vivek.HospitalManagement.DTO.Auth.Response.DiagnosticImageResponse;
-import com.vivek.HospitalManagement.DTO.Auth.Response.DoctorResponse;
-import com.vivek.HospitalManagement.DTO.Auth.Response.MedicalReportResponse;
-import com.vivek.HospitalManagement.DTO.Auth.Request.PatientProfileRequest;
-import com.vivek.HospitalManagement.DTO.Auth.Response.PatientProfileResponse;
+import com.vivek.HospitalManagement.DTO.Auth.Response.*;
 import com.vivek.HospitalManagement.Entity.DiagnosticImage;
 import com.vivek.HospitalManagement.Service.*;
 import com.vivek.HospitalManagement.Service.Reports.DiagnosticImageService;
 import com.vivek.HospitalManagement.Service.Reports.MedicalReportService;
 import com.vivek.HospitalManagement.Service.Reports.MinioStorageService;
-import jakarta.validation.Valid;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +27,12 @@ public class PatientController {
     private final DiagnosticImageService diagnosticImageService;
     private final MinioStorageService minioStorageService;
 
-    public PatientController(PatientService patientService, DoctorService doctorService, MedicalReportService medicalReportService, DiagnosticImageService diagnosticImageService, MinioStorageService minioStorageService) {
+    public PatientController(PatientService patientService,
+                             DoctorService doctorService,
+                             MedicalReportService medicalReportService,
+                             DiagnosticImageService diagnosticImageService,
+                             MinioStorageService minioStorageService) {
+
         this.patientService = patientService;
         this.doctorService = doctorService;
         this.medicalReportService = medicalReportService;
@@ -40,16 +40,14 @@ public class PatientController {
         this.minioStorageService = minioStorageService;
     }
 
-    @PostMapping("/profile")
-    public ResponseEntity<PatientProfileResponse> createProfile(
-            @Valid @RequestBody PatientProfileRequest patientProfileRequest, Authentication authentication){
+
+    @GetMapping("/profile")
+    public ResponseEntity<PatientProfileResponse> getProfile(Authentication authentication) {
 
         String email = authentication.getName();
-
-        PatientProfileResponse response = patientService.createProfile(email,patientProfileRequest);
+        PatientProfileResponse response = patientService.getMyProfile(email);
 
         return ResponseEntity.ok(response);
-
     }
 
     @GetMapping("/doctors")
