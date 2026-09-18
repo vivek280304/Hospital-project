@@ -95,4 +95,13 @@ public class PatientController {
                 .contentLength(image.getFileSize()).body(inputStreamResource);
 
     }
+    @GetMapping("/get-all-appointments")
+    public ResponseEntity<List<PatientAppointmentResponse>> getPatientAppointments
+            (Authentication authentication){
+
+        return ResponseEntity.ok(
+                patientService.getAppointments(authentication.getName()
+                ));
+
+    }
 }
