@@ -44,4 +44,6 @@ public class Appointment {
     @Column(name = "booking_key", unique = true)
     private String bookingKey;
 
+
+
 }

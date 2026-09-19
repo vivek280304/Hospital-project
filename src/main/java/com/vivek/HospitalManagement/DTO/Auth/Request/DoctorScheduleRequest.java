@@ -1,5 +1,6 @@
 package com.vivek.HospitalManagement.DTO.Auth.Request;
 
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,5 +23,8 @@ public class DoctorScheduleRequest {
 
     @NotNull(message = "End time is required")
     private LocalTime endTime;
+
+    @NotNull(message = "Slot Duration is required")
+    private Integer slotDuration;
 
 }

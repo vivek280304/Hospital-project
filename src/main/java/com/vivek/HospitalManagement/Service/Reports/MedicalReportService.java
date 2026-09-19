@@ -2,10 +2,12 @@ package com.vivek.HospitalManagement.Service.Reports;
 
 import com.vivek.HospitalManagement.DTO.Auth.Response.MedicalReportResponse;
 import com.vivek.HospitalManagement.Entity.Doctor;
+import com.vivek.HospitalManagement.Entity.MedicalReport;
 import com.vivek.HospitalManagement.Entity.Patient;
 import com.vivek.HospitalManagement.Entity.User;
 import com.vivek.HospitalManagement.Exceptions.ResourceNotFoundException;
 import com.vivek.HospitalManagement.Repository.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,12 +20,14 @@ public class MedicalReportService {
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final DoctorPatientShareRepository shareRepository;
+    private final AppointmentRepository appointmentRepository;
 
     public MedicalReportService(MedicalReportRepository medicalReportRepository,
                                 UserRepository userRepository,
                                 PatientRepository patientRepository,
                                 DoctorRepository doctorRepository,
-                                DoctorPatientShareRepository shareRepository) {
+                                DoctorPatientShareRepository shareRepository,
+                                AppointmentRepository appointmentRepository) {
 
 
         this.medicalReportRepository = medicalReportRepository;
@@ -31,6 +35,7 @@ public class MedicalReportService {
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
         this.shareRepository = shareRepository;
+        this.appointmentRepository = appointmentRepository;
     }
 
     public List<MedicalReportResponse> getPatientReportsForNurse(
@@ -132,6 +137,54 @@ public class MedicalReportService {
                         report.getNotes(),
                         report.getCreatedAt()
                 ))
+                .toList();
+    }
+
+    public List<MedicalReportResponse> getPatientReportsForDoctor(
+            String email,
+            Long patientId) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
+
+        Doctor doctor = doctorRepository.findByUserId(user.getId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Doctor profile not found"));
+
+        patientRepository.findById(patientId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Patient not found"));
+
+        boolean hasAppointment =
+                appointmentRepository.existsByDoctorIdAndPatientId(
+                        doctor.getId()
+                        ,patientId);
+
+        if (!hasAppointment) {
+            throw new AccessDeniedException(
+                    "You are not allowed to access this patient's reports"
+            );
+        }
+
+        List<MedicalReport> reports =
+                medicalReportRepository.findByPatientId(patientId);
+
+        return reports.stream()
+                .map(report ->
+                        new MedicalReportResponse(
+                                report.getId(),
+                                report.getAppointment().getId(),
+                                report.getPatient().getId(),
+                                report.getDoctor().getId(),
+                                report.getDiagnosis(),
+                                report.getSymptoms(),
+                                report.getTreatment(),
+                                report.getPrescription(),
+                                report.getNotes(),
+                                report.getCreatedAt()
+                        )
+                )
                 .toList();
     }
 

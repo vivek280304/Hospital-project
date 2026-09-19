@@ -126,11 +126,10 @@ public class DoctorController {
             @PathVariable Long patientId,
             Authentication authentication) {
 
-        String email = authentication.getName();
 
         List<MedicalReportResponse> reports =
-                appointmentService.getPatientReportsForDoctor(
-                        email,
+                medicalReportService.getPatientReportsForDoctor(
+                        authentication.getName(),
                         patientId
                 );
 

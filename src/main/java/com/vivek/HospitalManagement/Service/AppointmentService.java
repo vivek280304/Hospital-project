@@ -181,7 +181,7 @@ public class AppointmentService {
             Long doctorId,
             LocalDate date) {
 
-        Doctor doctor = doctorRepository.findById(doctorId)
+        doctorRepository.findById(doctorId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Doctor not found"));
 
@@ -210,15 +210,18 @@ public class AppointmentService {
 
         List<LocalTime> availableSlots = new ArrayList<>();
 
+        int duration = schedule.getSlotDuration();
+
         LocalTime slot = schedule.getStartTime();
 
-        while (!slot.plusMinutes(30).isAfter(schedule.getEndTime())) {
+        while (!slot.plusMinutes(duration)
+                .isAfter(schedule.getEndTime())) {
 
             if (!bookedTimes.contains(slot)) {
                 availableSlots.add(slot);
             }
 
-            slot = slot.plusMinutes(30);
+            slot = slot.plusMinutes(duration);
         }
 
         return availableSlots;
@@ -358,85 +361,7 @@ public class AppointmentService {
                 report.getCreatedAt()
         );
     }
-    public List<MedicalReportResponse> getMyMedicalReports(
-            String email) {
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
 
-        Patient patient = patientRepository.findByUserId(user.getId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Patient profile not found"));
 
-        List<MedicalReport> reports =
-                medicalReportRepository.findByPatientId(
-                        patient.getId()
-                );
-
-        return reports.stream()
-                .map(report ->
-                        new MedicalReportResponse(
-                                report.getId(),
-                                report.getAppointment().getId(),
-                                report.getPatient().getId(),
-                                report.getDoctor().getId(),
-                                report.getDiagnosis(),
-                                report.getSymptoms(),
-                                report.getTreatment(),
-                                report.getPrescription(),
-                                report.getNotes(),
-                                report.getCreatedAt()
-                        )
-                )
-                .toList();
-    }
-
-    public List<MedicalReportResponse> getPatientReportsForDoctor(
-            String email,
-            Long patientId) {
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
-
-        Doctor doctor = doctorRepository.findByUserId(user.getId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Doctor profile not found"));
-
-        patientRepository.findById(patientId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Patient not found"));
-
-        boolean hasAppointment =
-                appointmentRepository.existsByDoctorIdAndPatientId(
-                        doctor.getId()
-                        ,patientId);
-
-        if (!hasAppointment) {
-            throw new AccessDeniedException(
-                    "You are not allowed to access this patient's reports"
-            );
-        }
-
-        List<MedicalReport> reports =
-                medicalReportRepository.findByPatientId(patientId);
-
-        return reports.stream()
-                .map(report ->
-                        new MedicalReportResponse(
-                                report.getId(),
-                                report.getAppointment().getId(),
-                                report.getPatient().getId(),
-                                report.getDoctor().getId(),
-                                report.getDiagnosis(),
-                                report.getSymptoms(),
-                                report.getTreatment(),
-                                report.getPrescription(),
-                                report.getNotes(),
-                                report.getCreatedAt()
-                        )
-                )
-                .toList();
-    }
 }

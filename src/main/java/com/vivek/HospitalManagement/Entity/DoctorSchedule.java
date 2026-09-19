@@ -30,4 +30,7 @@ public class DoctorSchedule {
 
     @Column(nullable = false)
     private LocalTime endTime;
+
+    @Column(nullable = false)
+    private Integer slotDuration; // in minutes
 }

@@ -36,6 +36,7 @@ public class DoctorScheduleService {
         schedule.setDayOfWeek(request.getDayOfWeek());
         schedule.setStartTime(request.getStartTime());
         schedule.setEndTime(request.getEndTime());
+        schedule.setSlotDuration(request.getSlotDuration());
 
         doctorScheduleRepository.save(schedule);
     }
