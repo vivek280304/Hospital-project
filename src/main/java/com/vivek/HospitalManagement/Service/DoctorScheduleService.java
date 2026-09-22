@@ -3,6 +3,8 @@ package com.vivek.HospitalManagement.Service;
 import com.vivek.HospitalManagement.DTO.Auth.Request.DoctorScheduleRequest;
 import com.vivek.HospitalManagement.Entity.Doctor;
 import com.vivek.HospitalManagement.Entity.DoctorSchedule;
+import com.vivek.HospitalManagement.Exceptions.BadRequestException;
+import com.vivek.HospitalManagement.Exceptions.ResourceNotFoundException;
 import com.vivek.HospitalManagement.Repository.DoctorRepository;
 import com.vivek.HospitalManagement.Repository.DoctorScheduleRepository;
 import org.springframework.stereotype.Service;
@@ -22,10 +24,10 @@ public class DoctorScheduleService {
 
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
                 .orElseThrow(() ->
-                        new RuntimeException("Doctor not found"));
+                        new ResourceNotFoundException("Doctor not found"));
 
         if (!request.getStartTime().isBefore(request.getEndTime())) {
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Start time must be before end time"
             );
         }

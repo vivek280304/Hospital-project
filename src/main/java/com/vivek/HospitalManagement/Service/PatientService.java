@@ -50,21 +50,10 @@ public class PatientService {
                 );
 
     }
-    public List<PatientAppointmentResponse> getAppointments(String email){
+    public List<PatientAppointmentResponse> getAppointments(String email) {
 
-        List<Appointment> PatientAppointment = appointmentRepository.
-                findByPatientUserEmailOrderByAppointmentDateAscAppointmentTimeAsc(email);
-
-        return PatientAppointment.stream()
-                .map(appointment-> new PatientAppointmentResponse(
-                        appointment.getId(),
-                        appointment.getPatient().getId(),
-                        appointment.getPatient().getUser().getName(),
-                        appointment.getDoctor().getUser().getName(),
-                        appointment.getAppointmentDate(),
-                        appointment.getAppointmentTime(),
-                        appointment.getStatus()
-                )).toList();
+        return appointmentRepository
+                .findPatientAppointments(email);
     }
 
 

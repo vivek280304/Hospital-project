@@ -53,10 +53,12 @@ public class AppointmentService {
             String email,
             BookAppointmentRequest request) {
 
+        // 1. Find logged-in user
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User not found"));
 
+        // 2. Find or create patient profile
         Patient patient = patientRepository.findByUserId(user.getId())
                 .orElseGet(() -> {
 
@@ -70,32 +72,36 @@ public class AppointmentService {
                     return patientRepository.save(newPatient);
                 });
 
+        // 3. Find doctor
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Doctor not found"));
 
-        //Check doctor's schedule
+        // 4. Check doctor's schedule
         DayOfWeek day =
                 request.getAppointmentDate().getDayOfWeek();
 
-
-        boolean doctorWorks = doctorScheduleRepository
+        DoctorSchedule schedule = doctorScheduleRepository
                 .findByDoctorId(doctor.getId())
                 .stream()
-                .anyMatch(schedule ->
-                        schedule.getDayOfWeek().equals(day)
-                                && !request.getAppointmentTime()
-                                .isBefore(schedule.getStartTime())
-                                && !request.getAppointmentTime()
-                                .plusMinutes(30).isAfter(schedule.getEndTime())
-                );
-        if (!doctorWorks) {
-            throw new BadRequestException(
-                    "Doctor is not available at this time"
-            );
-        }
+                .filter(s ->
+                        s.getDayOfWeek().equals(day)
+                )
+                .filter(s ->
+                        !request.getAppointmentTime()
+                                .isBefore(s.getStartTime())
+                                &&
+                                !request.getAppointmentTime()
+                                        .plusMinutes(s.getSlotDuration())
+                                        .isAfter(s.getEndTime())
+                )
+                .findFirst()
+                .orElseThrow(() ->
+                        new BadRequestException(
+                                "Doctor is not available at this time"
+                        ));
 
-        // 4. Check double booking
+        // 5. Check double booking
         boolean alreadyBooked =
                 appointmentRepository
                         .existsByDoctorIdAndAppointmentDateAndAppointmentTimeAndStatus(
@@ -111,12 +117,13 @@ public class AppointmentService {
             );
         }
 
+        // 6. Generate unique booking key
         String bookingKey =
                 doctor.getId() + "-" +
                         request.getAppointmentDate() + "-" +
                         request.getAppointmentTime();
 
-        // 5. Create appointment
+        // 7. Create appointment
         Appointment appointment = new Appointment();
 
         appointment.setPatient(patient);
@@ -128,19 +135,22 @@ public class AppointmentService {
                 request.getAppointmentTime()
         );
         appointment.setReason(request.getReason());
-
         appointment.setStatus(AppointmentStatus.BOOKED);
         appointment.setBookingKey(bookingKey);
+
         appointmentRepository.save(appointment);
 
-        emailService.sendAppointmentBookedEmail(
-                patient.getUser().getEmail(),
-                patient.getUser().getName(),
-                doctor.getUser().getName(),
-                appointment.getAppointmentDate(),
-                appointment.getAppointmentTime(),
-                appointment.getReason()
-        );
+        // 8. Appointment email
+        // Keep disabled during load testing.
+
+    emailService.sendAppointmentBookedEmail(
+            patient.getUser().getEmail(),
+            patient.getUser().getName(),
+            doctor.getUser().getName(),
+            appointment.getAppointmentDate(),
+            appointment.getAppointmentTime(),
+            appointment.getReason()
+    );
 
     }
 
