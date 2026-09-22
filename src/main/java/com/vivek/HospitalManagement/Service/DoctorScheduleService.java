@@ -9,6 +9,8 @@ import com.vivek.HospitalManagement.Repository.DoctorRepository;
 import com.vivek.HospitalManagement.Repository.DoctorScheduleRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+
 @Service
 public class DoctorScheduleService {
 
@@ -32,6 +34,24 @@ public class DoctorScheduleService {
             );
         }
 
+        int duration = request.getSlotDuration();
+
+        if (duration <= 0) {
+            throw new BadRequestException(
+                    "Slot duration must be greater than 0"
+            );
+        }
+
+        long totalMinutes = Duration.between(
+                request.getStartTime(),
+                request.getEndTime()
+        ).toMinutes();
+
+        if (duration > totalMinutes) {
+            throw new BadRequestException(
+                    "Slot duration cannot exceed schedule duration"
+            );
+        }
         DoctorSchedule schedule = new DoctorSchedule();
 
         schedule.setDoctor(doctor);
