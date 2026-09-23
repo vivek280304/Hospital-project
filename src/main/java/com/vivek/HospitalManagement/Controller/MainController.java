@@ -1,6 +1,7 @@
 package com.vivek.HospitalManagement.Controller;
 
 import com.vivek.HospitalManagement.DTO.Auth.Response.DoctorResponse;
+import com.vivek.HospitalManagement.DTO.Auth.Response.DoctorWithScheduleResponse;
 import com.vivek.HospitalManagement.Service.AppointmentService;
 import com.vivek.HospitalManagement.Service.DoctorService;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +44,24 @@ public class MainController {
                         doctorId,
                         date
                 )
+        );
+    }
+
+    @GetMapping("/{doctorId}")
+    public ResponseEntity<DoctorResponse> getDoctor(
+            @PathVariable Long doctorId) {
+
+        return ResponseEntity.ok(
+                doctorService.getDoctorById(doctorId)
+        );
+    }
+
+    @GetMapping("/all")
+
+    public ResponseEntity<List<DoctorWithScheduleResponse>> getAllDoctors() {
+
+        return ResponseEntity.ok(
+                doctorService.getAllDoctorsWithSchedules()
         );
     }
 }

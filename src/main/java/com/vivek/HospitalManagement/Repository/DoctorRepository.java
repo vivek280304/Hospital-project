@@ -44,4 +44,28 @@ public interface DoctorRepository extends JpaRepository<Doctor,Long> {
     List<DoctorResponse> findDoctorsBySpecialization(
             @Param("specialization") String specialization
     );
+
+    @Query("""
+    SELECT new com.vivek.HospitalManagement.DTO.Auth.Response.DoctorResponse(
+        d.id,
+        u.name,
+        d.specialization,
+        d.experience
+    )
+    FROM Doctor d
+    JOIN d.user u
+    WHERE d.id = :doctorId
+""")
+    Optional<DoctorResponse> findDoctorById(
+            @Param("doctorId") Long doctorId
+    );
+
+    @Query("""
+    SELECT DISTINCT d
+    FROM Doctor d
+    JOIN FETCH d.user u
+    LEFT JOIN FETCH d.schedules s
+    ORDER BY d.id
+""")
+    List<Doctor> findAllDoctorsWithSchedules();
 }

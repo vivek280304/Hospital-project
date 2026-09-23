@@ -2,18 +2,17 @@ package com.vivek.HospitalManagement.DTO.Auth.Response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
+import java.util.List;
+
 @AllArgsConstructor
-public class DoctorProfileResponse {
+@Getter
+public class DoctorWithScheduleResponse {
 
+    private Long doctorId;
     private String name;
-    private String email;
-    private String licenseNumber;
     private String specialization;
-    private Integer experience;
-
+    private int experience;
+    private List<DoctorScheduleResponse> schedules;
 
 }

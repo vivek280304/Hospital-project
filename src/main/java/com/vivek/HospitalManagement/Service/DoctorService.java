@@ -2,6 +2,8 @@ package com.vivek.HospitalManagement.Service;
 
 import com.vivek.HospitalManagement.DTO.Auth.Response.DoctorProfileResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.DoctorResponse;
+import com.vivek.HospitalManagement.DTO.Auth.Response.DoctorScheduleResponse;
+import com.vivek.HospitalManagement.DTO.Auth.Response.DoctorWithScheduleResponse;
 import com.vivek.HospitalManagement.Entity.Appointment;
 import com.vivek.HospitalManagement.Entity.Doctor;
 import com.vivek.HospitalManagement.Entity.User;
@@ -68,6 +70,7 @@ public class DoctorService {
                         doctor.getUser().getName(),
                         doctor.getSpecialization(),
                         doctor.getExperience()
+
                 ))
                 .toList();
     }
@@ -120,6 +123,38 @@ public class DoctorService {
         return doctorRepository.findDoctorsBySpecialization(
                 specialization
         );
+    }
+
+    public DoctorResponse getDoctorById(Long doctorId) {
+
+        return doctorRepository.findDoctorById(doctorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Doctor not found"));
+    }
+
+    public List<DoctorWithScheduleResponse> getAllDoctorsWithSchedules() {
+
+        return doctorRepository.findAllDoctorsWithSchedules()
+                .stream()
+                .map(doctor -> new DoctorWithScheduleResponse(
+                        doctor.getId(),
+                        doctor.getUser().getName(),
+                        doctor.getSpecialization(),
+                        doctor.getExperience(),
+                        doctor.getSchedules()
+                                .stream()
+                                .map(schedule ->
+                                        new DoctorScheduleResponse(
+                                                schedule.getDayOfWeek(),
+                                                schedule.getStartTime(),
+                                                schedule.getEndTime(),
+                                                schedule.getSlotDuration()
+                                        )
+                                )
+                                .toList()
+                ))
+                .toList();
     }
 
 }
