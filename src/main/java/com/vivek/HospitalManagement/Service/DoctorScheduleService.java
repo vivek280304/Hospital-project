@@ -8,6 +8,7 @@ import com.vivek.HospitalManagement.Exceptions.ResourceNotFoundException;
 import com.vivek.HospitalManagement.Repository.DoctorRepository;
 import com.vivek.HospitalManagement.Repository.DoctorScheduleRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 
@@ -22,6 +23,7 @@ public class DoctorScheduleService {
         this.doctorRepository = doctorRepository;
     }
 
+    @Transactional
     public void createSchedule(DoctorScheduleRequest request) {
 
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
