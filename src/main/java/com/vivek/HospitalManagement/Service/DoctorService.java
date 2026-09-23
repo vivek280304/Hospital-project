@@ -114,4 +114,12 @@ public class DoctorService {
         appointmentRepository.save(appointment);
     }
 
+    public List<DoctorResponse> findDoctorsBySpecialization(
+            String specialization) {
+
+        return doctorRepository.findDoctorsBySpecialization(
+                specialization
+        );
+    }
+
 }

@@ -139,9 +139,6 @@ public class AppointmentService {
 
         appointmentRepository.save(appointment);
 
-        // 8. Appointment email
-        // Keep disabled during load testing.
-
     emailService.sendAppointmentBookedEmail(
             patient.getUser().getEmail(),
             patient.getUser().getName(),

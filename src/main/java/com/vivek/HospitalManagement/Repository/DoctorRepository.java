@@ -1,5 +1,6 @@
 package com.vivek.HospitalManagement.Repository;
 
+import com.vivek.HospitalManagement.DTO.Auth.Response.DoctorResponse;
 import com.vivek.HospitalManagement.Entity.Doctor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -27,4 +28,20 @@ public interface DoctorRepository extends JpaRepository<Doctor,Long> {
     );
 
     Optional<Doctor> findByUserEmail(String email);
+
+    @Query("""
+    SELECT new com.vivek.HospitalManagement.DTO.Auth.Response.DoctorResponse(
+        d.id,
+        u.name,
+        d.specialization,
+        d.experience
+    )
+    FROM Doctor d
+    JOIN d.user u
+    WHERE LOWER(d.specialization) = LOWER(:specialization)
+    ORDER BY d.experience DESC
+""")
+    List<DoctorResponse> findDoctorsBySpecialization(
+            @Param("specialization") String specialization
+    );
 }

@@ -51,9 +51,10 @@ public class SecurityConfig {
                                                 "/api/auth/reset-password",
                                                 "/api/auth/verify-registration",
                                                 "/api/auth/resend-registration-otp"
-                                                )
+                                                ).permitAll()
+                                        .requestMatchers("/api/doctors/**")
 
-                                .permitAll()
+                                        .permitAll()
                                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                         .requestMatchers("/api/doctor/**").hasRole("DOCTOR")
                                         .requestMatchers("/api/patient/**").hasRole("PATIENT")
