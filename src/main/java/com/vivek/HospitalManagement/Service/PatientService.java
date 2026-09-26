@@ -39,9 +39,10 @@ public class PatientService {
 
         Patient patient =  patientRepository.findByUserId(user.getId())
                 .orElseThrow(() ->
-                        new RuntimeException("Doctor profile not found"));
+                        new RuntimeException("Patient profile not found"));
 
         return new PatientProfileResponse(
+                patient.getId(),
                 user.getName(),
                 user.getEmail(),
                 patient.getDateOfBirth(),

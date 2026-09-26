@@ -57,7 +57,6 @@ public class MainController {
     }
 
     @GetMapping("/all")
-
     public ResponseEntity<List<DoctorWithScheduleResponse>> getAllDoctors() {
 
         return ResponseEntity.ok(

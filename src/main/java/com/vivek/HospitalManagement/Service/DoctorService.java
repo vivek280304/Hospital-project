@@ -47,6 +47,7 @@ public class DoctorService {
                         new RuntimeException("Doctor profile not found"));
 
         return new DoctorProfileResponse(
+                doctor.getId(),
                 user.getName(),
                 user.getEmail(),
                 doctor.getLicenseNumber(),

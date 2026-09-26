@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 
 
         return new NurseProfileResponse(
+                nurse.getId(),
                  user.getName()
                 ,user.getEmail()
                 ,nurse.getLicenseNumber()

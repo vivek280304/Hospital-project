@@ -1,6 +1,7 @@
 package com.vivek.HospitalManagement.Service;
 
 import com.vivek.HospitalManagement.DTO.Auth.Request.CreateUserRequest;
+import com.vivek.HospitalManagement.DTO.Auth.Response.RoleCountResponse;
 import com.vivek.HospitalManagement.Entity.*;
 import com.vivek.HospitalManagement.Enums.Role;
 import com.vivek.HospitalManagement.Exceptions.BadRequestException;
@@ -145,5 +146,27 @@ public class AdminService {
         receptionistRepository.save(receptionist);
     }
 
+    }
+
+    public RoleCountResponse getRoleCounts() {
+
+        long doctors =
+                userRepository.countByRole(Role.DOCTOR);
+
+        long nurses =
+                userRepository.countByRole(Role.NURSE);
+
+        long receptionists =
+                userRepository.countByRole(Role.RECEPTIONIST);
+
+        long labTechnicians =
+                userRepository.countByRole(Role.LAB_TECHNICIAN);
+
+        return new RoleCountResponse(
+                doctors,
+                nurses,
+                receptionists,
+                labTechnicians
+        );
     }
 }

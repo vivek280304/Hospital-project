@@ -10,6 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class NurseProfileResponse {
 
+    private Long id;
     private String name;
     private String email;
     private String licenseNumber;

@@ -9,6 +9,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class DoctorProfileResponse {
 
+    private Long id;
     private String name;
     private String email;
     private String licenseNumber;

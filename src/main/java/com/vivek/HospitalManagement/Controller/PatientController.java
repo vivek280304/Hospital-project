@@ -40,7 +40,6 @@ public class PatientController {
         this.minioStorageService = minioStorageService;
     }
 
-
     @GetMapping("/profile")
     public ResponseEntity<PatientProfileResponse> getProfile(Authentication authentication) {
 
