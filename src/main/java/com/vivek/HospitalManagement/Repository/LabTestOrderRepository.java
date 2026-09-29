@@ -67,5 +67,9 @@ public interface LabTestOrderRepository extends JpaRepository<LabTestOrder,Long>
         List<PatientLabOrderResponse> findPatientOrders(
                 @Param("email") String email
         );
+
+    List<LabTestOrder> findByPatientIdOrderByScheduledDateDescScheduledTimeDesc(
+            Long patientId
+    );
     }
 

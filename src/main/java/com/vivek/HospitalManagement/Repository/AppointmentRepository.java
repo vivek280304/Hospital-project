@@ -67,4 +67,11 @@ public interface AppointmentRepository
     List<PatientAppointmentResponse> findPatientAppointments(
             @Param("email") String email
     );
+
+    List<Appointment> findByDoctorIdAndPatientIdOrderByAppointmentDateDescAppointmentTimeDesc(
+            Long doctorId,
+            Long patientId
+    );
+
+    List<Appointment> findByDoctorId(Long doctorId);
 }

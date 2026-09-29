@@ -31,6 +31,7 @@ public class DoctorController {
     private final MinioStorageService minioStorageService;
     private final DoctorPatientShareService doctorPatientShareService;
     private final MedicalReportService medicalReportService;
+    private final DoctorPatientHistoryService doctorPatientHistoryService;
 
     public DoctorController(DoctorService doctorService,
                             AppointmentService appointmentService,
@@ -38,7 +39,7 @@ public class DoctorController {
                             DiagnosticImageService diagnosticImageService,
                             MinioStorageService minioStorageService,
                             DoctorPatientShareService doctorPatientShareService,
-                            MedicalReportService medicalReportService) {
+                            MedicalReportService medicalReportService, DoctorPatientHistoryService doctorPatientHistoryService) {
 
 
         this.doctorService = doctorService;
@@ -48,6 +49,7 @@ public class DoctorController {
         this.minioStorageService = minioStorageService;
         this.doctorPatientShareService = doctorPatientShareService;
         this.medicalReportService = medicalReportService;
+        this.doctorPatientHistoryService = doctorPatientHistoryService;
     }
 
     @GetMapping("/profile")
@@ -214,7 +216,31 @@ public class DoctorController {
                 )
         );
     }
+    @GetMapping("/patients")
+    public ResponseEntity<List<DoctorPatientResponse>> getMyPatients(
+            Authentication authentication
+    ) {
 
+        return ResponseEntity.ok(
+                doctorPatientHistoryService.getMyPatients(
+                        authentication.getName()
+                )
+        );
+    }
+
+    @GetMapping("/patients/{patientId}/history")
+    public ResponseEntity<DoctorPatientHistoryResponse> getPatientHistory(
+            @PathVariable Long patientId,
+            Authentication authentication
+    ) {
+
+        return ResponseEntity.ok(
+                doctorPatientHistoryService.getPatientHistory(
+                        authentication.getName(),
+                        patientId
+                )
+        );
+    }
 
 }
 
