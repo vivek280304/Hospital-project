@@ -74,4 +74,9 @@ public interface AppointmentRepository
     );
 
     List<Appointment> findByDoctorId(Long doctorId);
+
+    List<Appointment> findByAppointmentDateOrderByAppointmentTimeAsc(
+            LocalDate appointmentDate
+    );
+
 }

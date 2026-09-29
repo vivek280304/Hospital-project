@@ -5,6 +5,7 @@ import com.vivek.HospitalManagement.DTO.Auth.Request.BookAppointmentRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Request.CreatePatientRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Response.AvailableSlotResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.PatientDetailsResponse;
+import com.vivek.HospitalManagement.DTO.Auth.Response.ReceptionistAppointmentResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.ReceptionistProfileResponse;
 import com.vivek.HospitalManagement.Entity.DoctorSchedule;
 import com.vivek.HospitalManagement.Service.ReceptionistService;
@@ -85,6 +86,15 @@ public class ReceptionistController {
         );
 
         return ResponseEntity.ok("Appointment booked successfully");
+    }
+
+    @GetMapping("/appointments")
+    public ResponseEntity<List<ReceptionistAppointmentResponse>> getAppointments(
+            @RequestParam LocalDate date) {
+
+        return ResponseEntity.ok(
+                receptionistService.getAppointments(date)
+        );
     }
 
 }
