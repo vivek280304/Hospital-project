@@ -2,6 +2,7 @@ package com.vivek.HospitalManagement.Service;
 
 import com.vivek.HospitalManagement.DTO.Auth.Request.CreateUserRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Response.AdminDetailResponse;
+import com.vivek.HospitalManagement.DTO.Auth.Response.AdminUserResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.RoleCountResponse;
 import com.vivek.HospitalManagement.Entity.*;
 import com.vivek.HospitalManagement.Enums.Role;
@@ -204,4 +205,17 @@ public class AdminService {
 
         userRepository.save(user);
     }
+
+    public AdminUserResponse getUserByEmail(String email) {
+        User user =  userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
+
+        return new AdminUserResponse(user.getId(),
+                                        user.getName(),
+                                        user.getEmail(),
+                                        user.isAccountNonLocked());
+    }
+
+
 }

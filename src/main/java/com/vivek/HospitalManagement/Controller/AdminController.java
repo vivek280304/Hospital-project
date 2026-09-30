@@ -2,7 +2,9 @@ package com.vivek.HospitalManagement.Controller;
 
 import com.vivek.HospitalManagement.DTO.Auth.Request.CreateUserRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Response.AdminDetailResponse;
+import com.vivek.HospitalManagement.DTO.Auth.Response.AdminUserResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.RoleCountResponse;
+import com.vivek.HospitalManagement.Exceptions.BadRequestException;
 import com.vivek.HospitalManagement.Service.AdminService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -64,5 +66,21 @@ public class AdminController {
         return ResponseEntity.ok(
                 "User account unlocked successfully"
         );
+    }
+
+    @GetMapping("/users/search")
+    public ResponseEntity<AdminUserResponse> searchUser(
+            @RequestParam(required = false) String email) {
+
+        if (email == null || email.isBlank()) {
+            throw new BadRequestException(
+                    "Invalid email"
+            );
+        }
+
+        return ResponseEntity.ok(
+                adminService.getUserByEmail(email)
+        );
+
     }
 }
