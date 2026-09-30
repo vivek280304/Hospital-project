@@ -2,10 +2,8 @@ package com.vivek.HospitalManagement.Service;
 
 import com.vivek.HospitalManagement.DTO.Auth.Request.BookAppointmentRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Request.CreatePatientRequest;
-import com.vivek.HospitalManagement.DTO.Auth.Response.AvailableSlotResponse;
-import com.vivek.HospitalManagement.DTO.Auth.Response.PatientDetailsResponse;
-import com.vivek.HospitalManagement.DTO.Auth.Response.ReceptionistAppointmentResponse;
-import com.vivek.HospitalManagement.DTO.Auth.Response.ReceptionistProfileResponse;
+import com.vivek.HospitalManagement.DTO.Auth.Request.DoctorLeaveRequest;
+import com.vivek.HospitalManagement.DTO.Auth.Response.*;
 import com.vivek.HospitalManagement.Entity.*;
 import com.vivek.HospitalManagement.Enums.AppointmentStatus;
 import com.vivek.HospitalManagement.Enums.Role;
@@ -39,11 +37,13 @@ public class ReceptionistService {
         private final EmailService emailService;
         private final InitialPassword initialPassword;
         private final AppointmentService appointmentService;
+        private final DoctorLeaveRepository doctorLeaveRepository;
+
 
     private static final Logger log =
             LoggerFactory.getLogger(ReceptionistService.class);
 
-    public ReceptionistService(ReceptionistRepository receptionistRepository, UserRepository userRepository, PatientRepository patientRepository, DoctorRepository doctorRepository, DoctorScheduleRepository doctorScheduleRepository, AppointmentRepository appointmentRepository, PasswordEncoder passwordEncoder, EmailService emailService, InitialPassword initialPassword, AppointmentService appointmentService) {
+    public ReceptionistService(ReceptionistRepository receptionistRepository, UserRepository userRepository, PatientRepository patientRepository, DoctorRepository doctorRepository, DoctorScheduleRepository doctorScheduleRepository, AppointmentRepository appointmentRepository, PasswordEncoder passwordEncoder, EmailService emailService, InitialPassword initialPassword, AppointmentService appointmentService, DoctorLeaveRepository doctorLeaveRepository) {
         this.receptionistRepository = receptionistRepository;
         this.userRepository = userRepository;
         this.patientRepository = patientRepository;
@@ -54,6 +54,7 @@ public class ReceptionistService {
         this.emailService = emailService;
         this.initialPassword = initialPassword;
         this.appointmentService = appointmentService;
+        this.doctorLeaveRepository = doctorLeaveRepository;
     }
 
 
@@ -110,6 +111,23 @@ public class ReceptionistService {
             Long doctorId,
             LocalDate date) {
 
+        // Check doctor exists
+        doctorRepository.findById(doctorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Doctor not found"));
+
+        // Check if doctor is on leave
+        boolean doctorOnLeave =
+                doctorLeaveRepository.existsByDoctorIdAndLeaveDate(
+                        doctorId,
+                        date
+                );
+
+        // Doctor is unavailable for the entire day
+        if (doctorOnLeave) {
+            return new ArrayList<>();
+        }
+
         DayOfWeek day = date.getDayOfWeek();
 
         List<DoctorSchedule> schedules =
@@ -123,7 +141,8 @@ public class ReceptionistService {
                                 AppointmentStatus.BOOKED
                         );
 
-        List<AvailableSlotResponse> availableSlots = new ArrayList<>();
+        List<AvailableSlotResponse> availableSlots =
+                new ArrayList<>();
 
         for (DoctorSchedule schedule : schedules) {
 
@@ -136,15 +155,17 @@ public class ReceptionistService {
             while (!slotStart.plusMinutes(30)
                     .isAfter(schedule.getEndTime())) {
 
-                LocalTime slotEnd = slotStart.plusMinutes(30);
+                LocalTime slotEnd =
+                        slotStart.plusMinutes(30);
 
                 LocalTime finalSlotStart = slotStart;
 
-                boolean booked = bookedAppointments.stream()
-                        .anyMatch(appointment ->
-                                appointment.getAppointmentTime()
-                                        .equals(finalSlotStart)
-                        );
+                boolean booked =
+                        bookedAppointments.stream()
+                                .anyMatch(appointment ->
+                                        appointment.getAppointmentTime()
+                                                .equals(finalSlotStart)
+                                );
 
                 if (!booked) {
                     availableSlots.add(
@@ -272,5 +293,105 @@ public void bookAppointmentForPatient(
                 .toList();
     }
 
+    @Transactional
+    public DoctorLeaveResponse createDoctorLeave(
+            Long doctorId,
+            DoctorLeaveRequest request
+    ) {
+
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Doctor not found")
+                );
+
+        LocalDate leaveDate = request.getLeaveDate();
+
+        // Do not allow past dates
+        if (leaveDate.isBefore(LocalDate.now())) {
+            throw new BadRequestException(
+                    "Leave date cannot be in the past"
+            );
+        }
+
+        // Check duplicate leave
+        if (doctorLeaveRepository.existsByDoctorIdAndLeaveDate(
+                doctorId,
+                leaveDate
+        )) {
+            throw new BadRequestException(
+                    "Doctor already has leave on this date"
+            );
+        }
+
+        DoctorLeave leave = new DoctorLeave();
+
+        leave.setDoctor(doctor);
+        leave.setLeaveDate(leaveDate);
+        leave.setReason(request.getReason());
+
+        DoctorLeave saved =
+                doctorLeaveRepository.save(leave);
+
+        return new DoctorLeaveResponse(
+                saved.getId(),
+                doctor.getId(),
+                doctor.getUser().getName(),
+                saved.getLeaveDate(),
+                saved.getReason()
+        );
+    }
+
+    public List<DoctorLeaveResponse> getDoctorLeaves(
+            Long doctorId
+    ) {
+
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Doctor not found")
+                );
+
+        return doctorLeaveRepository
+                .findByDoctorIdOrderByLeaveDateAsc(doctorId)
+                .stream()
+                .map(leave ->
+                        new DoctorLeaveResponse(
+                                leave.getId(),
+                                doctor.getId(),
+                                doctor.getUser().getName(),
+                                leave.getLeaveDate(),
+                                leave.getReason()
+                        )
+                )
+                .toList();
+    }
+
+    @Transactional
+    public void removeDoctorLeave(
+            Long doctorId,
+            LocalDate date
+    ) {
+
+        // Check doctor exists
+        doctorRepository.findById(doctorId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Doctor not found"
+                        )
+                );
+
+        DoctorLeave leave =
+                doctorLeaveRepository
+                        .findByDoctorIdAndLeaveDate(
+                                doctorId,
+                                date
+                        )
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Doctor leave not found for this date"
+                                )
+                        );
+
+        doctorLeaveRepository.delete(leave);
+    }
 
 }

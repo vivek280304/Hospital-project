@@ -3,10 +3,8 @@ package com.vivek.HospitalManagement.Controller;
 
 import com.vivek.HospitalManagement.DTO.Auth.Request.BookAppointmentRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Request.CreatePatientRequest;
-import com.vivek.HospitalManagement.DTO.Auth.Response.AvailableSlotResponse;
-import com.vivek.HospitalManagement.DTO.Auth.Response.PatientDetailsResponse;
-import com.vivek.HospitalManagement.DTO.Auth.Response.ReceptionistAppointmentResponse;
-import com.vivek.HospitalManagement.DTO.Auth.Response.ReceptionistProfileResponse;
+import com.vivek.HospitalManagement.DTO.Auth.Request.DoctorLeaveRequest;
+import com.vivek.HospitalManagement.DTO.Auth.Response.*;
 import com.vivek.HospitalManagement.Entity.DoctorSchedule;
 import com.vivek.HospitalManagement.Service.ReceptionistService;
 import jakarta.validation.Valid;
@@ -94,6 +92,51 @@ public class ReceptionistController {
 
         return ResponseEntity.ok(
                 receptionistService.getAppointments(date)
+        );
+    }
+
+
+    @PostMapping("/doctors/{doctorId}/leave")
+    public ResponseEntity<DoctorLeaveResponse> createDoctorLeave(
+            @PathVariable Long doctorId,
+            @Valid @RequestBody DoctorLeaveRequest request
+    ) {
+
+        return ResponseEntity.ok(
+                receptionistService.createDoctorLeave(
+                        doctorId,
+                        request
+                )
+        );
+    }
+
+
+    @GetMapping("/doctors/{doctorId}/leaves")
+    public ResponseEntity<List<DoctorLeaveResponse>> getDoctorLeaves(
+            @PathVariable Long doctorId
+    ) {
+
+        return ResponseEntity.ok(
+                receptionistService.getDoctorLeaves(
+                        doctorId
+                )
+        );
+    }
+
+
+    @DeleteMapping("/doctors/{doctorId}/leave")
+    public ResponseEntity<String> removeDoctorLeave(
+            @PathVariable Long doctorId,
+            @RequestParam LocalDate date
+    ) {
+
+        receptionistService.removeDoctorLeave(
+                doctorId,
+                date
+        );
+
+        return ResponseEntity.ok(
+                "Doctor leave removed successfully"
         );
     }
 

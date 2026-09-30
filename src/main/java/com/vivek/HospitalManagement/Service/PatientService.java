@@ -2,10 +2,9 @@ package com.vivek.HospitalManagement.Service;
 
 import com.vivek.HospitalManagement.DTO.Auth.Response.PatientAppointmentResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.PatientProfileResponse;
-import com.vivek.HospitalManagement.Entity.Appointment;
 import com.vivek.HospitalManagement.Entity.Patient;
 import com.vivek.HospitalManagement.Entity.User;
-import com.vivek.HospitalManagement.Exceptions.ResourceNotFoundException;
+
 import com.vivek.HospitalManagement.Repository.AppointmentRepository;
 import com.vivek.HospitalManagement.Repository.PatientRepository;
 import com.vivek.HospitalManagement.Repository.UserRepository;
@@ -37,9 +36,19 @@ public class PatientService {
                 .orElseThrow(() ->
                         new UsernameNotFoundException("User not found"));
 
-        Patient patient =  patientRepository.findByUserId(user.getId())
-                .orElseThrow(() ->
-                        new RuntimeException("Patient profile not found"));
+        Patient patient = patientRepository.findByUserId(user.getId())
+                .orElse(null);
+
+        if (patient == null) {
+            return new PatientProfileResponse(
+                    null,
+                    user.getName(),
+                    user.getEmail(),
+                    null,
+                    null,
+                    null
+            );
+        }
 
         return new PatientProfileResponse(
                 patient.getId(),
@@ -48,8 +57,7 @@ public class PatientService {
                 patient.getDateOfBirth(),
                 patient.getGender(),
                 patient.getPhoneNumber()
-                );
-
+        );
     }
     public List<PatientAppointmentResponse> getAppointments(String email) {
 

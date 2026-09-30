@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,9 +36,9 @@ public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final MedicalReportRepository medicalReportRepository;
     private final EmailService emailService;
+    private final DoctorLeaveRepository doctorLeaveRepository;
 
-
-    public AppointmentService(UserRepository userRepository, DoctorRepository doctorRepository, PatientRepository patientRepository, DoctorScheduleRepository doctorScheduleRepository, AppointmentRepository appointmentRepository, MedicalReportRepository medicalReportRepository, EmailService emailService) {
+    public AppointmentService(UserRepository userRepository, DoctorRepository doctorRepository, PatientRepository patientRepository, DoctorScheduleRepository doctorScheduleRepository, AppointmentRepository appointmentRepository, MedicalReportRepository medicalReportRepository, EmailService emailService, DoctorLeaveRepository doctorLeaveRepository) {
         this.userRepository = userRepository;
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
@@ -45,6 +46,7 @@ public class AppointmentService {
         this.appointmentRepository = appointmentRepository;
         this.medicalReportRepository = medicalReportRepository;
         this.emailService = emailService;
+        this.doctorLeaveRepository = doctorLeaveRepository;
     }
 
     @Transactional
@@ -57,26 +59,46 @@ public class AppointmentService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User not found"));
 
-        // 2. Find or create patient profile
+        // 2. Find doctor
+        Doctor doctor = doctorRepository.findById(request.getDoctorId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Doctor not found"));
+
+        // 3. Check if doctor is on leave
+        boolean doctorOnLeave =
+                doctorLeaveRepository.existsByDoctorIdAndLeaveDate(
+                        doctor.getId(),
+                        request.getAppointmentDate()
+                );
+
+        if (doctorOnLeave) {
+            throw new BadRequestException(
+                    "Doctor is on leave on " +
+                            request.getAppointmentDate()
+            );
+        }
+
+        // 4. Find or create patient profile
         Patient patient = patientRepository.findByUserId(user.getId())
                 .orElseGet(() -> {
 
                     Patient newPatient = new Patient();
 
                     newPatient.setUser(user);
-                    newPatient.setDateOfBirth(request.getDateOfBirth());
-                    newPatient.setGender(request.getGender());
-                    newPatient.setPhoneNumber(request.getPhoneNumber());
+                    newPatient.setDateOfBirth(
+                            request.getDateOfBirth()
+                    );
+                    newPatient.setGender(
+                            request.getGender()
+                    );
+                    newPatient.setPhoneNumber(
+                            request.getPhoneNumber()
+                    );
 
                     return patientRepository.save(newPatient);
                 });
 
-        // 3. Find doctor
-        Doctor doctor = doctorRepository.findById(request.getDoctorId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Doctor not found"));
-
-        // 4. Check doctor's schedule
+        // 5. Check doctor's schedule
         DayOfWeek day =
                 request.getAppointmentDate().getDayOfWeek();
 
@@ -100,7 +122,7 @@ public class AppointmentService {
                                 "Doctor is not available at this time"
                         ));
 
-        // 5. Check double booking
+        // 6. Check double booking
         boolean alreadyBooked =
                 appointmentRepository
                         .existsByDoctorIdAndAppointmentDateAndAppointmentTimeAndStatus(
@@ -116,38 +138,49 @@ public class AppointmentService {
             );
         }
 
-        // 6. Generate unique booking key
+        // 7. Generate unique booking key
         String bookingKey =
                 doctor.getId() + "-" +
                         request.getAppointmentDate() + "-" +
                         request.getAppointmentTime();
 
-        // 7. Create appointment
+        // 8. Create appointment
         Appointment appointment = new Appointment();
 
         appointment.setPatient(patient);
         appointment.setDoctor(doctor);
+
         appointment.setAppointmentDate(
                 request.getAppointmentDate()
         );
+
         appointment.setAppointmentTime(
                 request.getAppointmentTime()
         );
-        appointment.setReason(request.getReason());
-        appointment.setStatus(AppointmentStatus.BOOKED);
-        appointment.setBookingKey(bookingKey);
+
+        appointment.setReason(
+                request.getReason()
+        );
+
+        appointment.setStatus(
+                AppointmentStatus.BOOKED
+        );
+
+        appointment.setBookingKey(
+                bookingKey
+        );
 
         appointmentRepository.save(appointment);
 
-    emailService.sendAppointmentBookedEmail(
-            patient.getUser().getEmail(),
-            patient.getUser().getName(),
-            doctor.getUser().getName(),
-            appointment.getAppointmentDate(),
-            appointment.getAppointmentTime(),
-            appointment.getReason()
-    );
-
+        // 9. Send email
+        emailService.sendAppointmentBookedEmail(
+                patient.getUser().getEmail(),
+                patient.getUser().getName(),
+                doctor.getUser().getName(),
+                appointment.getAppointmentDate(),
+                appointment.getAppointmentTime(),
+                appointment.getReason()
+        );
     }
 
     public void cancelAppointment(Long appointmentId, String email){
@@ -187,12 +220,27 @@ public class AppointmentService {
             Long doctorId,
             LocalDate date) {
 
+        // 1. Verify doctor exists
         doctorRepository.findById(doctorId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Doctor not found"));
 
+        // 2. Check doctor leave FIRST
+        boolean doctorOnLeave =
+                doctorLeaveRepository.existsByDoctorIdAndLeaveDate(
+                        doctorId,
+                        date
+                );
+
+        // 3. If doctor is on leave, return NO slots
+        if (doctorOnLeave) {
+            return Collections.emptyList();
+        }
+
+        // 4. Get day of week
         DayOfWeek day = date.getDayOfWeek();
 
+        // 5. Find doctor's schedule
         DoctorSchedule schedule = doctorScheduleRepository
                 .findByDoctorId(doctorId)
                 .stream()
@@ -200,8 +248,10 @@ public class AppointmentService {
                 .findFirst()
                 .orElseThrow(() ->
                         new BadRequestException(
-                                "Doctor does not work on this day"));
+                                "Doctor does not work on this day"
+                        ));
 
+        // 6. Get already booked appointments
         List<Appointment> appointments =
                 appointmentRepository
                         .findByDoctorIdAndAppointmentDateAndStatus(
@@ -210,10 +260,12 @@ public class AppointmentService {
                                 AppointmentStatus.BOOKED
                         );
 
+        // 7. Store booked times
         Set<LocalTime> bookedTimes = appointments.stream()
                 .map(Appointment::getAppointmentTime)
                 .collect(Collectors.toSet());
 
+        // 8. Generate available slots
         List<LocalTime> availableSlots = new ArrayList<>();
 
         int duration = schedule.getSlotDuration();
