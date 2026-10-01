@@ -92,14 +92,15 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request) {
 
+        ex.printStackTrace();
+
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "INTERNAL_SERVER_ERROR",
-                "An unexpected error occurred",
+                ex.getMessage(),
                 request.getRequestURI()
         );
     }
-
     private ResponseEntity<ErrorResponse> buildResponse(
             HttpStatus status,
             String error,

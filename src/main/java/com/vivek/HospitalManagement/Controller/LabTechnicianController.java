@@ -4,8 +4,10 @@ import com.vivek.HospitalManagement.DTO.Auth.Request.CompleteLabTestRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Request.ImagingUploadRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Response.ImagingOrderResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.LabOrderResponse;
+import com.vivek.HospitalManagement.DTO.Auth.Response.LabTechnicianProfileResponse;
 import com.vivek.HospitalManagement.Entity.DiagnosticImage;
 import com.vivek.HospitalManagement.Enums.LabTestOrderStatus;
+import com.vivek.HospitalManagement.Service.LabTechnicianService;
 import com.vivek.HospitalManagement.Service.LabTestOrderService;
 import com.vivek.HospitalManagement.Service.Reports.DiagnosticImageService;
 import com.vivek.HospitalManagement.Service.Reports.ImagingOrderService;
@@ -28,15 +30,25 @@ public class LabTechnicianController {
     private final DiagnosticImageService diagnosticImageService;
     private final ImagingOrderService imagingOrderService;
     private final LabTestOrderService labTestOrderService;
-
+    private final LabTechnicianService labTechnicianService;
 
     public LabTechnicianController(DiagnosticImageService diagnosticImageService,
                                    ImagingOrderService imagingOrderService,
-                                   LabTestOrderService labTestOrderService) {
+                                   LabTestOrderService labTestOrderService, LabTechnicianService labTechnicianService) {
 
         this.diagnosticImageService = diagnosticImageService;
         this.imagingOrderService = imagingOrderService;
         this.labTestOrderService = labTestOrderService;
+        this.labTechnicianService = labTechnicianService;
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<LabTechnicianProfileResponse> profile(Authentication authentication){
+
+        return ResponseEntity.ok(
+                labTechnicianService.profile(authentication.getName())
+        );
+
     }
 
 
