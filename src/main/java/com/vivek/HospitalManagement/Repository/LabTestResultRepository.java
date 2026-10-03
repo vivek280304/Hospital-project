@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface LabTestResultRepository extends JpaRepository<LabTestResult,Long> {
@@ -33,5 +34,23 @@ public interface LabTestResultRepository extends JpaRepository<LabTestResult,Lon
     Optional<PatientLabResultResponse> findPatientResult(
             @Param("orderId") Long orderId,
             @Param("email") String email
+    );
+
+    @Query("""
+    SELECT new com.vivek.HospitalManagement.DTO.Auth.Response.PatientLabResultResponse(
+        r.order.id,
+        r.order.labTest.name,
+        r.order.labTest.sampleType,
+        r.result,
+        r.remarks,
+        r.order.completedAt
+    )
+    FROM LabTestResult r
+    WHERE r.order.patient.id = :patientId
+      AND r.order.status = com.vivek.HospitalManagement.Enums.LabTestOrderStatus.COMPLETED
+    ORDER BY r.order.id DESC
+""")
+    List<PatientLabResultResponse> findSharedPatientResults(
+            @Param("patientId") Long patientId
     );
 }

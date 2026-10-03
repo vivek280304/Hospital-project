@@ -11,7 +11,7 @@ import com.vivek.HospitalManagement.Enums.Role;
 import com.vivek.HospitalManagement.Exceptions.BadRequestException;
 import com.vivek.HospitalManagement.Exceptions.ResourceNotFoundException;
 import com.vivek.HospitalManagement.Repository.*;
-import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,13 +27,17 @@ public class LabTestOrderService {
     private final LabTestRepository labTestRepository;
     private final LabTestOrderRepository labTestOrderRepository;
     private final LabTestResultRepository labTestResultRepository;
+    private final DoctorRepository doctorRepository;
+    private final DoctorPatientShareRepository doctorPatientShareRepository;
 
-    public LabTestOrderService(UserRepository userRepository, PatientRepository patientRepository, LabTestRepository labTestRepository, LabTestOrderRepository labTestOrderRepository, LabTestResultRepository labTestResultRepository) {
+    public LabTestOrderService(UserRepository userRepository, PatientRepository patientRepository, LabTestRepository labTestRepository, LabTestOrderRepository labTestOrderRepository, LabTestResultRepository labTestResultRepository, DoctorRepository doctorRepository, DoctorPatientShareRepository doctorPatientShareRepository) {
         this.userRepository = userRepository;
         this.patientRepository = patientRepository;
         this.labTestRepository = labTestRepository;
         this.labTestOrderRepository = labTestOrderRepository;
         this.labTestResultRepository = labTestResultRepository;
+        this.doctorRepository = doctorRepository;
+        this.doctorPatientShareRepository = doctorPatientShareRepository;
     }
 
 
@@ -76,7 +80,6 @@ public class LabTestOrderService {
         order.setScheduledTime(request.getScheduledTime());
         order.setStatus(LabTestOrderStatus.ORDERED);
         order.setOrderedAt(LocalDateTime.now());
-
         // 6. Save
         labTestOrderRepository.save(order);
     }
@@ -234,5 +237,30 @@ public class LabTestOrderService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Lab test result not found"));
+    }
+
+    public List<PatientLabResultResponse> getSharedPatientLabResults(
+            Long patientId,
+            String doctorEmail) {
+
+        Doctor doctor = doctorRepository.findByUserEmail(doctorEmail)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Doctor not found"));
+
+        boolean hasAccess =
+                doctorPatientShareRepository
+                        .existsByPatientIdAndJuniorDoctorIdAndRevokedAtIsNull(
+                                patientId,
+                                doctor.getId()
+                        );
+
+        if (!hasAccess) {
+            throw new AccessDeniedException(
+                    "You do not have access to this patient's lab results"
+            );
+        }
+
+        return labTestResultRepository
+                .findSharedPatientResults(patientId);
     }
 }

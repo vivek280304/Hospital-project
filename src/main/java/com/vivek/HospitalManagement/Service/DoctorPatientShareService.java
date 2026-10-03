@@ -39,7 +39,7 @@ public class DoctorPatientShareService {
     }
 
     @Transactional
-    public void share(Long patientID, @Valid @MonotonicNonNull SharePatientRequest request , String doctorEmail){
+    public void share(Long patientID, SharePatientRequest request , String doctorEmail){
 
         Patient patient = patientRepository.findById(patientID)
                 .orElseThrow(()-> new ResourceNotFoundException("Patient not found"));

@@ -32,6 +32,7 @@ public class DoctorController {
     private final DoctorPatientShareService doctorPatientShareService;
     private final MedicalReportService medicalReportService;
     private final DoctorPatientHistoryService doctorPatientHistoryService;
+    private final LabTestOrderService labTestOrderService;
 
     public DoctorController(DoctorService doctorService,
                             AppointmentService appointmentService,
@@ -39,7 +40,7 @@ public class DoctorController {
                             DiagnosticImageService diagnosticImageService,
                             MinioStorageService minioStorageService,
                             DoctorPatientShareService doctorPatientShareService,
-                            MedicalReportService medicalReportService, DoctorPatientHistoryService doctorPatientHistoryService) {
+                            MedicalReportService medicalReportService, DoctorPatientHistoryService doctorPatientHistoryService, LabTestOrderService labTestOrderService) {
 
 
         this.doctorService = doctorService;
@@ -50,6 +51,7 @@ public class DoctorController {
         this.doctorPatientShareService = doctorPatientShareService;
         this.medicalReportService = medicalReportService;
         this.doctorPatientHistoryService = doctorPatientHistoryService;
+        this.labTestOrderService = labTestOrderService;
     }
 
     @GetMapping("/profile")
@@ -238,6 +240,19 @@ public class DoctorController {
                 doctorPatientHistoryService.getPatientHistory(
                         authentication.getName(),
                         patientId
+                )
+        );
+    }
+
+    @GetMapping("/shared-patients/{patientId}/lab-results")
+    public ResponseEntity<List<PatientLabResultResponse>> getSharedPatientLabResults(
+            @PathVariable Long patientId,
+            Authentication authentication) {
+
+        return ResponseEntity.ok(
+                labTestOrderService.getSharedPatientLabResults(
+                        patientId,
+                        authentication.getName()
                 )
         );
     }
