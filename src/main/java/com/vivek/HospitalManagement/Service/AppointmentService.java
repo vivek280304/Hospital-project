@@ -13,6 +13,7 @@ import com.vivek.HospitalManagement.Exceptions.ResourceNotFoundException;
 import com.vivek.HospitalManagement.Exceptions.SlotAlreadyBookedException;
 import com.vivek.HospitalManagement.Repository.*;
 import com.vivek.HospitalManagement.Service.NotificationService.EmailService;
+import com.vivek.HospitalManagement.Service.Payment.CashfreeService;
 import jakarta.transaction.Transactional;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -37,8 +38,11 @@ public class AppointmentService {
     private final MedicalReportRepository medicalReportRepository;
     private final EmailService emailService;
     private final DoctorLeaveRepository doctorLeaveRepository;
+    private final CashfreeService cashfreeService;
+    private final PaymentRepository paymentRepository;
 
-    public AppointmentService(UserRepository userRepository, DoctorRepository doctorRepository, PatientRepository patientRepository, DoctorScheduleRepository doctorScheduleRepository, AppointmentRepository appointmentRepository, MedicalReportRepository medicalReportRepository, EmailService emailService, DoctorLeaveRepository doctorLeaveRepository) {
+
+    public AppointmentService(UserRepository userRepository, DoctorRepository doctorRepository, PatientRepository patientRepository, DoctorScheduleRepository doctorScheduleRepository, AppointmentRepository appointmentRepository, MedicalReportRepository medicalReportRepository, EmailService emailService, DoctorLeaveRepository doctorLeaveRepository, CashfreeService cashfreeService, PaymentRepository paymentRepository) {
         this.userRepository = userRepository;
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
@@ -47,6 +51,8 @@ public class AppointmentService {
         this.medicalReportRepository = medicalReportRepository;
         this.emailService = emailService;
         this.doctorLeaveRepository = doctorLeaveRepository;
+        this.cashfreeService = cashfreeService;
+        this.paymentRepository = paymentRepository;
     }
 
     @Transactional
@@ -129,7 +135,7 @@ public class AppointmentService {
                                 doctor.getId(),
                                 request.getAppointmentDate(),
                                 request.getAppointmentTime(),
-                                AppointmentStatus.BOOKED
+                                AppointmentStatus.PAYMENT_PENDING
                         );
 
         if (alreadyBooked) {
