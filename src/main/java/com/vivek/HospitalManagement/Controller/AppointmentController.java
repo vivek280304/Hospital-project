@@ -1,9 +1,11 @@
 package com.vivek.HospitalManagement.Controller;
 
 import com.vivek.HospitalManagement.DTO.Auth.Request.BookAppointmentRequest;
+import com.vivek.HospitalManagement.DTO.Payment.PaymentStatusResponse;
 import com.vivek.HospitalManagement.DTO.Payment.SlotPaymentResponse;
 import com.vivek.HospitalManagement.Service.AppointmentService;
 import com.vivek.HospitalManagement.Service.Payment.AppointmentPayment;
+import com.vivek.HospitalManagement.Service.Payment.PaymentService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,10 +23,12 @@ public class AppointmentController {
 
     private final AppointmentService appointmentService;
     private final AppointmentPayment appointmentPayment;
+    private final PaymentService paymentService;
 
-    public AppointmentController(AppointmentService appointmentService, AppointmentPayment appointmentPayment) {
+    public AppointmentController(AppointmentService appointmentService, AppointmentPayment appointmentPayment, PaymentService paymentService) {
         this.appointmentService = appointmentService;
         this.appointmentPayment = appointmentPayment;
+        this.paymentService = paymentService;
     }
 
     @PostMapping
@@ -78,6 +82,16 @@ public class AppointmentController {
                         userDetails.getUsername(),
                         request
                 );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/payment/{orderId}/status")
+    public ResponseEntity<PaymentStatusResponse> getPaymentStatus(
+            @PathVariable String orderId) {
+
+        PaymentStatusResponse response =
+                paymentService.getPaymentStatus(orderId);
 
         return ResponseEntity.ok(response);
     }

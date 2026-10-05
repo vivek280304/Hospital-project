@@ -188,8 +188,8 @@ public class AppointmentService {
                 patient.getUser().getName(),
                 doctor.getUser().getName(),
                 appointment.getAppointmentDate(),
-                appointment.getAppointmentTime(),
-                appointment.getReason()
+                appointment.getAppointmentTime()
+
         );
     }
 

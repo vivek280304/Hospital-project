@@ -1,9 +1,6 @@
 package com.vivek.HospitalManagement.Service.Payment;
 
-import com.vivek.HospitalManagement.DTO.Payment.CashfreeCreateOrderReponse;
-import com.vivek.HospitalManagement.DTO.Payment.CashfreeCreateOrderRequest;
-import com.vivek.HospitalManagement.DTO.Payment.CashfreeCustomerDetails;
-import com.vivek.HospitalManagement.DTO.Payment.CashfreeOrderMeta;
+import com.vivek.HospitalManagement.DTO.Payment.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -69,7 +66,7 @@ public class CashfreeService {
 
     }
 
-    public String getOrderStatus(String orderId) {
+    public CashfreeOrderResponse getOrderStatus(String orderId) {
 
         return restClient.get()
                 .uri(baseUrl + "/orders/" + orderId)
@@ -78,6 +75,6 @@ public class CashfreeService {
                 .header("x-api-version", apiVersion)
                 .header("x-request-id", UUID.randomUUID().toString())
                 .retrieve()
-                .body(String.class);
+                .body(CashfreeOrderResponse.class);
     }
 }

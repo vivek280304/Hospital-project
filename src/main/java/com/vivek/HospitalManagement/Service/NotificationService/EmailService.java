@@ -86,8 +86,8 @@ public class EmailService {
             String patientName,
             String doctorName,
             LocalDate appointmentDate,
-            LocalTime appointmentTime,
-            String reason) {
+            LocalTime appointmentTime
+            ) {
 
         sendEmail(
                 toEmail,
@@ -112,8 +112,8 @@ public class EmailService {
                         patientName,
                         doctorName,
                         appointmentDate,
-                        appointmentTime,
-                        reason != null ? reason : "Not specified"
+                        appointmentTime
+
                 )
         );
     }

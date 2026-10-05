@@ -1,9 +1,6 @@
 package com.vivek.HospitalManagement.Service.Payment;
 
-import com.vivek.HospitalManagement.DTO.Payment.CashfreeCreateOrderReponse;
-import com.vivek.HospitalManagement.DTO.Payment.CashfreeOrderResponse;
-import com.vivek.HospitalManagement.DTO.Payment.CreatePaymentRequest;
-import com.vivek.HospitalManagement.DTO.Payment.PaymentResponse;
+import com.vivek.HospitalManagement.DTO.Payment.*;
 import com.vivek.HospitalManagement.Entity.*;
 import com.vivek.HospitalManagement.Enums.AppointmentStatus;
 import com.vivek.HospitalManagement.Enums.PaymentStatus;
@@ -12,6 +9,7 @@ import com.vivek.HospitalManagement.Repository.AppointmentRepository;
 import com.vivek.HospitalManagement.Repository.AppointmentSlotHoldRepository;
 import com.vivek.HospitalManagement.Repository.PatientRepository;
 import com.vivek.HospitalManagement.Repository.PaymentRepository;
+import com.vivek.HospitalManagement.Service.NotificationService.EmailService;
 import com.vivek.HospitalManagement.Service.SlotHoldService;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -28,13 +26,15 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final AppointmentRepository appointmentRepository;
     private final CashfreeService cashfreeService;
+    private final EmailService emailService;
 
-    public PaymentService(PatientRepository patientRepository, AppointmentSlotHoldRepository appointmentSlotHoldRepository, PaymentRepository paymentRepository, AppointmentRepository appointmentRepository, CashfreeService cashfreeService) {
+    public PaymentService(PatientRepository patientRepository, AppointmentSlotHoldRepository appointmentSlotHoldRepository, PaymentRepository paymentRepository, AppointmentRepository appointmentRepository, CashfreeService cashfreeService, EmailService emailService) {
         this.patientRepository = patientRepository;
         this.appointmentSlotHoldRepository = appointmentSlotHoldRepository;
         this.paymentRepository = paymentRepository;
         this.appointmentRepository = appointmentRepository;
         this.cashfreeService = cashfreeService;
+        this.emailService = emailService;
     }
 
     public PaymentResponse createPayment(CreatePaymentRequest request){
@@ -107,19 +107,29 @@ public class PaymentService {
         }
 
         // 3. Verify order directly with Cashfree
-        String cashfreeResponse =
+        CashfreeOrderResponse cashfreeResponse =
                 cashfreeService.getOrderStatus(orderId);
 
         System.out.println("==============================");
         System.out.println("Cashfree Order Verification");
         System.out.println("Order ID: " + orderId);
-        System.out.println("Response: " + cashfreeResponse);
+        System.out.println("Order Status: " + cashfreeResponse.getOrderStatus());
+        System.out.println("Order Amount: " + cashfreeResponse.getOrderAmount());
         System.out.println("==============================");
 
-        if (!cashfreeResponse.contains("\"order_status\":\"PAID\"")) {
-
+        if (!"PAID".equalsIgnoreCase(cashfreeResponse.getOrderStatus())) {
             throw new RuntimeException(
                     "Cashfree order is not PAID: " + orderId
+            );
+        }
+
+        if (cashfreeResponse.getOrderAmount() == null
+                || payment.getAmount() == null
+                || cashfreeResponse.getOrderAmount()
+                .compareTo(payment.getAmount()) != 0) {
+
+            throw new RuntimeException(
+                    "Payment amount mismatch for order: " + orderId
             );
         }
 
@@ -202,9 +212,49 @@ public class PaymentService {
         // 10. Delete temporary hold
         appointmentSlotHoldRepository.delete(hold);
 
+        emailService.sendAppointmentBookedEmail(
+                patient.getUser().getEmail(),
+                patient.getUser().getName(),
+                doctor.getUser().getName(),
+                appointment.getAppointmentDate(),
+                appointment.getAppointmentTime()
+        );
+
         System.out.println(
                 "Appointment successfully created: "
                         + appointment.getId()
+        );
+    }
+
+    @Transactional
+    public PaymentStatusResponse getPaymentStatus(String orderId) {
+
+        Payment payment = paymentRepository
+                .findByOrderId(orderId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Payment not found for order: " + orderId
+                        ));
+
+        Appointment appointment = payment.getAppointment();
+
+        if (appointment == null) {
+
+            return new PaymentStatusResponse(
+                    payment.getStatus().name(),
+                    null,
+                    payment.getAmount(),
+                    null,
+                    null
+            );
+        }
+
+        return new PaymentStatusResponse(
+                payment.getStatus().name(),
+                appointment.getId(),
+                payment.getAmount(),
+                appointment.getAppointmentDate(),
+                appointment.getAppointmentTime()
         );
     }
 }
