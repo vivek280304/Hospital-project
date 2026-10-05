@@ -106,6 +106,23 @@ public class PaymentService {
             return;
         }
 
+        // 3. Verify order directly with Cashfree
+        String cashfreeResponse =
+                cashfreeService.getOrderStatus(orderId);
+
+        System.out.println("==============================");
+        System.out.println("Cashfree Order Verification");
+        System.out.println("Order ID: " + orderId);
+        System.out.println("Response: " + cashfreeResponse);
+        System.out.println("==============================");
+
+        if (!cashfreeResponse.contains("\"order_status\":\"PAID\"")) {
+
+            throw new RuntimeException(
+                    "Cashfree order is not PAID: " + orderId
+            );
+        }
+
         // 3. Find temporary slot hold
         AppointmentSlotHold hold = appointmentSlotHoldRepository
                 .findByOrderId(orderId)

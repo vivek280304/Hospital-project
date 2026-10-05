@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Service
 public class CashfreeService {
@@ -66,5 +67,17 @@ public class CashfreeService {
                 .retrieve()
                 .body(CashfreeCreateOrderReponse.class);
 
+    }
+
+    public String getOrderStatus(String orderId) {
+
+        return restClient.get()
+                .uri(baseUrl + "/orders/" + orderId)
+                .header("x-client-id", clientId)
+                .header("x-client-secret", clientSecret)
+                .header("x-api-version", apiVersion)
+                .header("x-request-id", UUID.randomUUID().toString())
+                .retrieve()
+                .body(String.class);
     }
 }
