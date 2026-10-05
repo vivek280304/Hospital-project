@@ -86,8 +86,7 @@ public class EmailService {
             String patientName,
             String doctorName,
             LocalDate appointmentDate,
-            LocalTime appointmentTime
-            ) {
+            LocalTime appointmentTime) {
 
         sendEmail(
                 toEmail,
@@ -102,7 +101,6 @@ public class EmailService {
                 Doctor: %s
                 Date: %s
                 Time: %s
-                Reason: %s
     
                 Please arrive a few minutes before your appointment time.
     
@@ -113,7 +111,6 @@ public class EmailService {
                         doctorName,
                         appointmentDate,
                         appointmentTime
-
                 )
         );
     }
