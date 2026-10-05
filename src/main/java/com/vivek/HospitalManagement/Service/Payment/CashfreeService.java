@@ -3,6 +3,7 @@ package com.vivek.HospitalManagement.Service.Payment;
 import com.vivek.HospitalManagement.DTO.Payment.CashfreeCreateOrderReponse;
 import com.vivek.HospitalManagement.DTO.Payment.CashfreeCreateOrderRequest;
 import com.vivek.HospitalManagement.DTO.Payment.CashfreeCustomerDetails;
+import com.vivek.HospitalManagement.DTO.Payment.CashfreeOrderMeta;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,9 @@ public class CashfreeService {
     @Value("${cashfree.api-version}")
     private String apiVersion;
 
+    @Value("${cashfree.webhook-url}")
+    private String webhookUrl;
+
     public CashfreeService(RestClient restClient) {
         this.restClient = restClient;
     }
@@ -43,6 +47,13 @@ public class CashfreeService {
         requestBody.setOrder_amount(amount);
         requestBody.setOrder_currency("INR");
         requestBody.setCustomer_details(customerDetails);
+
+        CashfreeOrderMeta orderMeta =
+                new CashfreeOrderMeta();
+
+        orderMeta.setNotify_url(webhookUrl);
+
+        requestBody.setOrder_meta(orderMeta);
 
         return restClient.post()
                 .uri(baseUrl + "/orders")

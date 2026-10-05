@@ -7,11 +7,9 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-public class CashfreeCreateOrderRequest {
+public class CashfreeWebhookOrder {
 
     private String order_id;
     private BigDecimal order_amount;
     private String order_currency;
-    private CashfreeCustomerDetails customer_details;
-    private CashfreeOrderMeta order_meta;
 }

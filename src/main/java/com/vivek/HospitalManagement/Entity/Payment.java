@@ -35,7 +35,7 @@ public class Payment {
     private String paymentMethod;
 
     @OneToOne
-    @JoinColumn(name = "appointment_id", nullable = false)
+    @JoinColumn(name = "appointment_id")
     private Appointment appointment;
 
     private LocalDateTime createdAt;

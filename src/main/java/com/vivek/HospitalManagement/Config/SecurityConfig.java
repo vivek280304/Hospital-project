@@ -57,7 +57,8 @@ public class SecurityConfig {
                                                 "/api/auth/forgot-password",
                                                 "/api/auth/reset-password",
                                                 "/api/auth/verify-registration",
-                                                "/api/auth/resend-registration-otp"
+                                                "/api/auth/resend-registration-otp",
+                                                "/api/payments/webhook"
                                                 ).permitAll()
                                         .requestMatchers("/api/doctors/**")
 

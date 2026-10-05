@@ -1,10 +1,14 @@
 package com.vivek.HospitalManagement.Controller;
 
 import com.vivek.HospitalManagement.DTO.Auth.Request.BookAppointmentRequest;
+import com.vivek.HospitalManagement.DTO.Payment.SlotPaymentResponse;
 import com.vivek.HospitalManagement.Service.AppointmentService;
+import com.vivek.HospitalManagement.Service.Payment.AppointmentPayment;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -16,9 +20,11 @@ import java.util.List;
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
+    private final AppointmentPayment appointmentPayment;
 
-    public AppointmentController(AppointmentService appointmentService) {
+    public AppointmentController(AppointmentService appointmentService, AppointmentPayment appointmentPayment) {
         this.appointmentService = appointmentService;
+        this.appointmentPayment = appointmentPayment;
     }
 
     @PostMapping
@@ -62,5 +68,18 @@ public class AppointmentController {
         return ResponseEntity.ok("Appointment cancelled successfully");
     }
 
+    @PostMapping("/payment")
+    public ResponseEntity<SlotPaymentResponse> createAppointmentPayment(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody BookAppointmentRequest request) {
+
+        SlotPaymentResponse response =
+                appointmentPayment.createAppointmentPayment(
+                        userDetails.getUsername(),
+                        request
+                );
+
+        return ResponseEntity.ok(response);
+    }
 
 }
