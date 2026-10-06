@@ -212,13 +212,7 @@ public class PaymentService {
         // 10. Delete temporary hold
         appointmentSlotHoldRepository.delete(hold);
 
-        emailService.sendAppointmentBookedEmail(
-                patient.getUser().getEmail(),
-                patient.getUser().getName(),
-                doctor.getUser().getName(),
-                appointment.getAppointmentDate(),
-                appointment.getAppointmentTime()
-        );
+
 
         System.out.println(
                 "Appointment successfully created: "
@@ -256,5 +250,18 @@ public class PaymentService {
                 appointment.getAppointmentDate(),
                 appointment.getAppointmentTime()
         );
+    }
+
+    public void sendConfirmationEmail(Long appointmentId){
+
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                        .orElseThrow(()-> new ResourceNotFoundException("booking not found"));
+
+        emailService.sendAppointmentBookedEmail(appointment.getPatient().getUser().getEmail(),
+                appointment.getPatient().getUser().getName(),
+                appointment.getDoctor().getUser().getName(),
+                appointment.getAppointmentDate(),
+                appointment.getAppointmentTime());
+
     }
 }
