@@ -4,37 +4,46 @@ import com.vivek.HospitalManagement.DTO.Payment.*;
 import com.vivek.HospitalManagement.Entity.*;
 import com.vivek.HospitalManagement.Enums.AppointmentStatus;
 import com.vivek.HospitalManagement.Enums.PaymentStatus;
+import com.vivek.HospitalManagement.Event.AppointmentBookedEvent;
 import com.vivek.HospitalManagement.Exceptions.ResourceNotFoundException;
 import com.vivek.HospitalManagement.Repository.AppointmentRepository;
 import com.vivek.HospitalManagement.Repository.AppointmentSlotHoldRepository;
 import com.vivek.HospitalManagement.Repository.PatientRepository;
 import com.vivek.HospitalManagement.Repository.PaymentRepository;
-import com.vivek.HospitalManagement.Service.NotificationService.EmailService;
-import com.vivek.HospitalManagement.Service.SlotHoldService;
 import jakarta.transaction.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class PaymentService {
 
+
     private final PatientRepository patientRepository;
     private final AppointmentSlotHoldRepository appointmentSlotHoldRepository;
+    private final ApplicationEventPublisher eventPublisher;
     private final PaymentRepository paymentRepository;
     private final AppointmentRepository appointmentRepository;
     private final CashfreeService cashfreeService;
-    private final EmailService emailService;
 
-    public PaymentService(PatientRepository patientRepository, AppointmentSlotHoldRepository appointmentSlotHoldRepository, PaymentRepository paymentRepository, AppointmentRepository appointmentRepository, CashfreeService cashfreeService, EmailService emailService) {
+
+    public PaymentService(
+            PatientRepository patientRepository, AppointmentSlotHoldRepository appointmentSlotHoldRepository,
+            ApplicationEventPublisher eventPublisher,
+            PaymentRepository paymentRepository,
+            AppointmentRepository appointmentRepository,
+            CashfreeService cashfreeService) {
+
         this.patientRepository = patientRepository;
         this.appointmentSlotHoldRepository = appointmentSlotHoldRepository;
+        this.eventPublisher = eventPublisher;
         this.paymentRepository = paymentRepository;
         this.appointmentRepository = appointmentRepository;
         this.cashfreeService = cashfreeService;
-        this.emailService = emailService;
+
+
     }
 
     public PaymentResponse createPayment(CreatePaymentRequest request){
@@ -212,7 +221,9 @@ public class PaymentService {
         // 10. Delete temporary hold
         appointmentSlotHoldRepository.delete(hold);
 
-
+        eventPublisher.publishEvent(
+                new AppointmentBookedEvent(appointment.getId())
+        );
 
         System.out.println(
                 "Appointment successfully created: "
@@ -252,16 +263,5 @@ public class PaymentService {
         );
     }
 
-    public void sendConfirmationEmail(Long appointmentId){
 
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                        .orElseThrow(()-> new ResourceNotFoundException("booking not found"));
-
-        emailService.sendAppointmentBookedEmail(appointment.getPatient().getUser().getEmail(),
-                appointment.getPatient().getUser().getName(),
-                appointment.getDoctor().getUser().getName(),
-                appointment.getAppointmentDate(),
-                appointment.getAppointmentTime());
-
-    }
 }

@@ -43,7 +43,18 @@ public class ReceptionistService {
     private static final Logger log =
             LoggerFactory.getLogger(ReceptionistService.class);
 
-    public ReceptionistService(ReceptionistRepository receptionistRepository, UserRepository userRepository, PatientRepository patientRepository, DoctorRepository doctorRepository, DoctorScheduleRepository doctorScheduleRepository, AppointmentRepository appointmentRepository, PasswordEncoder passwordEncoder, EmailService emailService, InitialPassword initialPassword, AppointmentService appointmentService, DoctorLeaveRepository doctorLeaveRepository) {
+    public ReceptionistService(ReceptionistRepository receptionistRepository,
+                               UserRepository userRepository,
+                               PatientRepository patientRepository,
+                               DoctorRepository doctorRepository,
+                               DoctorScheduleRepository doctorScheduleRepository,
+                               AppointmentRepository appointmentRepository,
+                               PasswordEncoder passwordEncoder,
+                               EmailService emailService,
+                               InitialPassword initialPassword,
+                               AppointmentService appointmentService,
+                               DoctorLeaveRepository doctorLeaveRepository) {
+
         this.receptionistRepository = receptionistRepository;
         this.userRepository = userRepository;
         this.patientRepository = patientRepository;
