@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.Setter;
 import com.vivek.HospitalManagement.Enums.Role;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 public class CreateUserRequest {
@@ -34,5 +36,7 @@ public class CreateUserRequest {
     private Integer experience;
 
     private String department;
+
+    private BigDecimal amount;
 
 }

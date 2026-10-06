@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -15,6 +17,6 @@ public class DoctorProfileResponse {
     private String licenseNumber;
     private String specialization;
     private Integer experience;
-
+    private BigDecimal consultationFee;
 
 }

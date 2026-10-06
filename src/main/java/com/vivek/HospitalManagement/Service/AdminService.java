@@ -1,6 +1,7 @@
 package com.vivek.HospitalManagement.Service;
 
 import com.vivek.HospitalManagement.DTO.Auth.Request.CreateUserRequest;
+import com.vivek.HospitalManagement.DTO.Auth.Request.DoctorFeeChange;
 import com.vivek.HospitalManagement.DTO.Auth.Response.AdminDetailResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.AdminUserResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.RoleCountResponse;
@@ -12,6 +13,9 @@ import com.vivek.HospitalManagement.Repository.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+
 
 @Service
 public class AdminService {
@@ -84,13 +88,21 @@ public class AdminService {
                 throw new BadRequestException("Valid experience is required for doctor");
             }
 
+            if (request.getAmount() == null ||
+                    request.getAmount().compareTo(BigDecimal.ZERO) < 0) {
+
+                throw new BadRequestException(
+                        "Valid consultation fee is required for doctor"
+                );
+            }
+
             Doctor doctor = new Doctor();
 
             doctor.setUser(user);
             doctor.setLicenseNumber(request.getLicenseNumber());
             doctor.setExperience(request.getExperience());
             doctor.setSpecialization(request.getSpecialization());
-
+            doctor.setConsultationFee(request.getAmount());
 
             doctorRepository.save(doctor);
         }
@@ -214,8 +226,26 @@ public class AdminService {
         return new AdminUserResponse(user.getId(),
                                         user.getName(),
                                         user.getEmail(),
+                                        user.getRole(),
                                         user.isAccountNonLocked());
     }
 
+    public void changeFee(DoctorFeeChange request){
+
+        Doctor doctor = doctorRepository.findByUserEmail(request.getEmail())
+                .orElseThrow(()-> new ResourceNotFoundException("Doctor not found"));
+
+        if (request.getAmount() == null ||
+                request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+
+            throw new BadRequestException(
+                    "Consultation fee must be greater than zero"
+            );
+        }
+
+        doctor.setConsultationFee(request.getAmount());
+
+        doctorRepository.save(doctor);
+    }
 
 }

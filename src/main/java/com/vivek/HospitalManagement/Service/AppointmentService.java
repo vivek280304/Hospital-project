@@ -5,24 +5,18 @@ import com.vivek.HospitalManagement.DTO.Auth.Request.CreateMedicalReportRequest;
 import com.vivek.HospitalManagement.DTO.Auth.Response.AppointmentResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.MedicalReportResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.PatientDetailsResponse;
-import com.vivek.HospitalManagement.DTO.Payment.CashfreeCreateOrderReponse;
-import com.vivek.HospitalManagement.DTO.Payment.CashfreeCreateOrderRequest;
-import com.vivek.HospitalManagement.DTO.Payment.SlotPaymentResponse;
 import com.vivek.HospitalManagement.Entity.*;
 import com.vivek.HospitalManagement.Enums.AppointmentStatus;
-import com.vivek.HospitalManagement.Enums.PaymentStatus;
 import com.vivek.HospitalManagement.Exceptions.AlreadyExistException;
 import com.vivek.HospitalManagement.Exceptions.BadRequestException;
 import com.vivek.HospitalManagement.Exceptions.ResourceNotFoundException;
 import com.vivek.HospitalManagement.Exceptions.SlotAlreadyBookedException;
 import com.vivek.HospitalManagement.Repository.*;
 import com.vivek.HospitalManagement.Service.NotificationService.EmailService;
-import com.vivek.HospitalManagement.Service.Payment.CashfreeService;
 import jakarta.transaction.Transactional;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -41,11 +35,18 @@ public class AppointmentService {
     private final MedicalReportRepository medicalReportRepository;
     private final EmailService emailService;
     private final DoctorLeaveRepository doctorLeaveRepository;
-    private final CashfreeService cashfreeService;
-    private final PaymentRepository paymentRepository;
-    private final SlotHoldService slotHoldService;
 
-    public AppointmentService(UserRepository userRepository, DoctorRepository doctorRepository, PatientRepository patientRepository, DoctorScheduleRepository doctorScheduleRepository, AppointmentRepository appointmentRepository, MedicalReportRepository medicalReportRepository, EmailService emailService, DoctorLeaveRepository doctorLeaveRepository, CashfreeService cashfreeService, PaymentRepository paymentRepository, SlotHoldService slotHoldService) {
+
+    public AppointmentService(UserRepository userRepository,
+                              DoctorRepository doctorRepository,
+                              PatientRepository patientRepository,
+                              DoctorScheduleRepository doctorScheduleRepository,
+                              AppointmentRepository appointmentRepository,
+                              MedicalReportRepository medicalReportRepository,
+                              EmailService emailService,
+                              DoctorLeaveRepository doctorLeaveRepository
+                             ) {
+
         this.userRepository = userRepository;
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
@@ -54,9 +55,7 @@ public class AppointmentService {
         this.medicalReportRepository = medicalReportRepository;
         this.emailService = emailService;
         this.doctorLeaveRepository = doctorLeaveRepository;
-        this.cashfreeService = cashfreeService;
-        this.paymentRepository = paymentRepository;
-        this.slotHoldService = slotHoldService;
+
     }
 
     @Transactional
@@ -192,6 +191,7 @@ public class AppointmentService {
 
         );
     }
+
 
     public void cancelAppointment(Long appointmentId, String email){
 
@@ -430,6 +430,18 @@ public class AppointmentService {
         );
     }
 
+    public void sendConfirmationEmail(Long appointmentId){
+
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(()-> new ResourceNotFoundException("booking not found"));
+
+        emailService.sendAppointmentBookedEmail(appointment.getPatient().getUser().getEmail(),
+                appointment.getPatient().getUser().getName(),
+                appointment.getDoctor().getUser().getName(),
+                appointment.getAppointmentDate(),
+                appointment.getAppointmentTime());
+
+    }
 
 
 

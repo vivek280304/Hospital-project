@@ -1,6 +1,7 @@
 package com.vivek.HospitalManagement.Controller;
 
 import com.vivek.HospitalManagement.DTO.Auth.Request.CreateUserRequest;
+import com.vivek.HospitalManagement.DTO.Auth.Request.DoctorFeeChange;
 import com.vivek.HospitalManagement.DTO.Auth.Response.AdminDetailResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.AdminUserResponse;
 import com.vivek.HospitalManagement.DTO.Auth.Response.RoleCountResponse;
@@ -82,5 +83,16 @@ public class AdminController {
                 adminService.getUserByEmail(email)
         );
 
+    }
+
+    @PatchMapping("/doctors/fee")
+    public ResponseEntity<String> changeDoctorFee(
+            @Valid @RequestBody DoctorFeeChange request) {
+
+        adminService.changeFee(request);
+
+        return ResponseEntity.ok(
+                "Doctor consultation fee updated successfully"
+        );
     }
 }

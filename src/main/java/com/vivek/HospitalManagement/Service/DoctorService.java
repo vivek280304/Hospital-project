@@ -52,7 +52,8 @@ public class DoctorService {
                 user.getEmail(),
                 doctor.getLicenseNumber(),
                 doctor.getSpecialization(),
-                doctor.getExperience());
+                doctor.getExperience(),
+                doctor.getConsultationFee());
     }
 
     public List<DoctorResponse> findAvailableDoctors(
@@ -70,7 +71,8 @@ public class DoctorService {
                         doctor.getId(),
                         doctor.getUser().getName(),
                         doctor.getSpecialization(),
-                        doctor.getExperience()
+                        doctor.getExperience(),
+                        doctor.getConsultationFee()
 
                 ))
                 .toList();

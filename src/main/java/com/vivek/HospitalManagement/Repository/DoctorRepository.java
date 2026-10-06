@@ -34,7 +34,8 @@ public interface DoctorRepository extends JpaRepository<Doctor,Long> {
         d.id,
         u.name,
         d.specialization,
-        d.experience
+        d.experience,
+        d.consultationFee
     )
     FROM Doctor d
     JOIN d.user u
@@ -50,15 +51,14 @@ public interface DoctorRepository extends JpaRepository<Doctor,Long> {
         d.id,
         u.name,
         d.specialization,
-        d.experience
+        d.experience,
+        d.consultationFee
     )
     FROM Doctor d
     JOIN d.user u
     WHERE d.id = :doctorId
 """)
-    Optional<DoctorResponse> findDoctorById(
-            @Param("doctorId") Long doctorId
-    );
+    Optional<DoctorResponse> findDoctorById(@Param("doctorId") Long doctorId);
 
     @Query("""
     SELECT DISTINCT d
