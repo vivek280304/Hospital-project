@@ -1,3 +1,6 @@
+# ===============================
+# BUILD STAGE
+# ===============================
 FROM eclipse-temurin:26-jdk AS build
 
 WORKDIR /app
@@ -12,6 +15,9 @@ COPY src ./src
 RUN ./mvnw -B clean package -DskipTests
 
 
+# ===============================
+# RUNTIME STAGE
+# ===============================
 FROM eclipse-temurin:26-jre
 
 WORKDIR /app
@@ -24,4 +30,5 @@ USER appuser
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Temporary diagnostic: prints presence only, never secret values
+ENTRYPOINT ["sh", "-c", "if [ -n \"$DB_URL\" ]; then echo 'DB_URL_PRESENT=yes'; else echo 'DB_URL_PRESENT=no'; fi; if [ -n \"$DB_USERNAME\" ]; then echo 'DB_USERNAME_PRESENT=yes'; else echo 'DB_USERNAME_PRESENT=no'; fi; exec java -jar app.jar"]
