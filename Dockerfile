@@ -31,4 +31,4 @@ USER appuser
 EXPOSE 8080
 
 # Temporary diagnostic: prints presence only, never secret values
-ENTRYPOINT ["sh", "-c", "if [ -n \"$DB_URL\" ]; then echo 'DB_URL_PRESENT=yes'; else echo 'DB_URL_PRESENT=no'; fi; if [ -n \"$DB_USERNAME\" ]; then echo 'DB_USERNAME_PRESENT=yes'; else echo 'DB_USERNAME_PRESENT=no'; fi; exec java -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "echo '--- DATABASE CONFIG DIAGNOSTICS ---'; if [ -n \"$DB_URL\" ]; then echo 'DB_URL is present'; else echo 'DB_URL is MISSING'; fi; if [ -n \"$SPRING_DATASOURCE_URL\" ]; then echo 'SPRING_DATASOURCE_URL is present'; else echo 'SPRING_DATASOURCE_URL is missing'; fi; echo '--- APPLICATION CONFIGURATION ---'; jar tf app.jar | grep 'application.*properties' || true; exec java -jar app.jar --debug"]
