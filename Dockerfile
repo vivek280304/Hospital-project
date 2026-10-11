@@ -22,13 +22,17 @@ FROM eclipse-temurin:26-jre
 
 WORKDIR /app
 
+# Create a non-root user for security
 RUN useradd --system --uid 10001 appuser
 
+# Copy the built Spring Boot JAR
 COPY --from=build /app/target/*.jar app.jar
 
+# Run as a non-root user
 USER appuser
 
+# Render web service port
 EXPOSE 8080
 
-# Temporary diagnostic: prints presence only, never secret values
-ENTRYPOINT ["sh", "-c", "echo '--- DATABASE CONFIG DIAGNOSTICS ---'; if [ -n \"$DB_URL\" ]; then echo 'DB_URL is present'; else echo 'DB_URL is MISSING'; fi; if [ -n \"$SPRING_DATASOURCE_URL\" ]; then echo 'SPRING_DATASOURCE_URL is present'; else echo 'SPRING_DATASOURCE_URL is missing'; fi; echo '--- APPLICATION CONFIGURATION ---'; jar tf app.jar | grep 'application.*properties' || true; exec java -jar app.jar --debug"]
+# Start Spring Boot application
+ENTRYPOINT ["java", "-jar", "app.jar"]
