@@ -56,6 +56,20 @@ public class DoctorService {
                 doctor.getConsultationFee());
     }
 
+    public List<DoctorResponse> findAllDoctors(){
+
+        List<Doctor> doctors =
+                doctorRepository.findAll();
+
+        return doctors.stream()
+                .map(doctor -> new DoctorResponse(doctor.getId(),
+                        doctor.getUser().getName(),
+                        doctor.getSpecialization(),
+                        doctor.getExperience(),
+                        doctor.getConsultationFee()))
+                .toList();
+    }
+
     public List<DoctorResponse> findAvailableDoctors(
             DayOfWeek day,
             String specialization) {

@@ -25,12 +25,16 @@ public class MainController {
 
     @GetMapping
     public ResponseEntity<List<DoctorResponse>> findDoctors(
-            @RequestParam String specialization) {
+            @RequestParam(required = false) String specialization) {
+
+        if (specialization == null || specialization.isBlank()) {
+            return ResponseEntity.ok(
+                    doctorService.findAllDoctors()
+            );
+        }
 
         return ResponseEntity.ok(
-                doctorService.findDoctorsBySpecialization(
-                        specialization
-                )
+                doctorService.findDoctorsBySpecialization(specialization)
         );
     }
 
