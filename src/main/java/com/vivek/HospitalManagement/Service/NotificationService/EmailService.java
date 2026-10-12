@@ -1,40 +1,42 @@
 package com.vivek.HospitalManagement.Service.NotificationService;
 
+import com.mailjet.client.ClientOptions;
+import com.mailjet.client.MailjetClient;
+import com.mailjet.client.MailjetRequest;
+import com.mailjet.client.MailjetResponse;
+import com.mailjet.client.resource.Emailv31;
 import com.vivek.HospitalManagement.Exceptions.EmailSendingException;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Map;
 
 @Service
 public class EmailService {
 
-    private final RestClient restClient;
+    private final MailjetClient mailjetClient;
     private final String fromEmail;
 
     public EmailService(
-            RestClient.Builder restClientBuilder,
-            @Value("${resend.api-key}") String apiKey,
-            @Value("${resend.from-email}") String fromEmail
+            @Value("${mailjet.api-key}") String apiKey,
+            @Value("${mailjet.api-secret}") String apiSecret,
+            @Value("${mailjet.from-email}") String fromEmail
     ) {
-        this.restClient = restClientBuilder
-                .baseUrl("https://api.resend.com")
-                .defaultHeader(
-                        "Authorization",
-                        "Bearer " + apiKey
-                )
-                .build();
+        this.mailjetClient = new MailjetClient(
+                ClientOptions.builder()
+                        .apiKey(apiKey)
+                        .apiSecretKey(apiSecret)
+                        .build()
+        );
 
         this.fromEmail = fromEmail;
     }
 
     /**
-     * Sends an email using the Resend HTTPS API.
+     * Sends an email using the Mailjet API.
      */
     private void sendEmail(
             String toEmail,
@@ -42,21 +44,50 @@ public class EmailService {
             String text
     ) {
         try {
-            Map<String, Object> requestBody = Map.of(
-                    "from", fromEmail,
-                    "to", new String[]{toEmail},
-                    "subject", subject,
-                    "text", text
+            JSONObject message = new JSONObject()
+                    .put(
+                            "From",
+                            new JSONObject()
+                                    .put("Email", fromEmail)
+                                    .put("Name", "Hospital Management")
+                    )
+                    .put(
+                            "To",
+                            new JSONArray()
+                                    .put(
+                                            new JSONObject()
+                                                    .put("Email", toEmail)
+                                    )
+                    )
+                    .put("Subject", subject)
+                    .put("TextPart", text);
+
+            MailjetRequest request = new MailjetRequest(
+                    Emailv31.resource
+            ).property(
+                    Emailv31.MESSAGES,
+                    new JSONArray().put(message)
             );
 
-            restClient.post()
-                    .uri("/emails")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(requestBody)
-                    .retrieve()
-                    .toBodilessEntity();
+            MailjetResponse response = mailjetClient.post(request);
 
-        } catch (RestClientException e) {
+            if (response.getStatus() < 200
+                    || response.getStatus() >= 300) {
+
+                throw new EmailSendingException(
+                        "Mailjet rejected email to " + toEmail
+                                + ". HTTP status: "
+                                + response.getStatus(),
+                        new RuntimeException(
+                                response.getData().toString()
+                        )
+                );
+            }
+
+        } catch (EmailSendingException e) {
+            throw e;
+
+        } catch (Exception e) {
             throw new EmailSendingException(
                     "Failed to send email to " + toEmail,
                     e
@@ -65,7 +96,7 @@ public class EmailService {
     }
 
     /**
-     * Password reset OTP email.
+     * 1. Password reset OTP email.
      */
     public void sendPasswordResetOtp(
             String toEmail,
@@ -88,7 +119,7 @@ public class EmailService {
     }
 
     /**
-     * Registration OTP email.
+     * 2. Registration OTP email.
      */
     public void sendRegistrationOtp(
             String toEmail,
@@ -111,7 +142,7 @@ public class EmailService {
     }
 
     /**
-     * Appointment confirmation email.
+     * 3. Appointment confirmation email.
      */
     public void sendAppointmentBookedEmail(
             String toEmail,
@@ -148,7 +179,7 @@ public class EmailService {
     }
 
     /**
-     * Appointment reminder email.
+     * 4. Appointment reminder email.
      */
     public void sendAppointmentReminderEmail(
             String toEmail,
@@ -185,7 +216,7 @@ public class EmailService {
     }
 
     /**
-     * Notification when a patient is shared with another doctor.
+     * 5. Notification when a patient is shared with another doctor.
      */
     public void sendPatientSharedEmail(
             String toEmail,
@@ -222,7 +253,7 @@ public class EmailService {
     }
 
     /**
-     * Notification when an imaging report is uploaded.
+     * 6. Notification when an imaging report is uploaded.
      */
     public void sendImagingReportUploadedEmail(
             String toEmail,
@@ -232,7 +263,8 @@ public class EmailService {
     ) {
         sendEmail(
                 toEmail,
-                "Hospital Management - " + imagingType + " Report Available",
+                "Hospital Management - " + imagingType
+                        + " Report Available",
                 """
                 Dear %s,
 
@@ -260,7 +292,7 @@ public class EmailService {
     }
 
     /**
-     * Notification when a patient account is created.
+     * 7. Notification when a patient account is created.
      */
     public void sendPatientAccountCreatedEmail(
             String toEmail,
@@ -300,7 +332,7 @@ public class EmailService {
     }
 
     /**
-     * Login OTP email.
+     * 8. Login OTP email.
      */
     public void sendLoginOtp(
             String toEmail,
